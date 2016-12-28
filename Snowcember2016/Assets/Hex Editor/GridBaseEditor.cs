@@ -54,10 +54,13 @@ public class GridBaseEditor : EditorWindow
     void ManagementGUI()
     {
         EditorGUILayout.LabelField("Grid Base Version: 1.00");
+
         board = (HexGridBoard)EditorGUILayout.ObjectField("Board", board, typeof(HexGridBoard), allowSceneObjects: true);
         if (board != null)
         {
             grid = (HexGrid)EditorGUILayout.ObjectField("Grid", board.grid, typeof(HexGrid), allowSceneObjects: false);
+            if (grid != null)
+                grid.linkCells();
         }
 
         EditorGUILayout.BeginHorizontal();

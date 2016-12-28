@@ -46,7 +46,7 @@ public class CombatManager : MonoBehaviour
             unit.pos = board.getCellAtPos(unit.startPosX, unit.startPosY);
         }
         switchTarget(getTurnPlayer());
-        getTurnPlayer().StartTurn();
+        getTurnPlayer().StartTurn(this);
         highlightMode = HighlightMode.Standard;
     }
 
@@ -175,7 +175,7 @@ public class CombatManager : MonoBehaviour
 
         foreach (MapCell m_cell in cellsToHighlight)
         {
-            m_cell.GetComponent<SpriteRenderer>().color = Color.green;
+            m_cell.GetComponent<SpriteRenderer>().color = new Color(150f / 255f, 255f / 255f, 0f);
         }
     }
 
@@ -225,7 +225,7 @@ public class CombatManager : MonoBehaviour
 
             int dist = Cell.getDist(playerPos.cellData, cursorCell.cellData);
 
-            foreach (Cell surroundingcell in cursorCell.cellData.getNeightbors())
+            foreach (Cell surroundingcell in cursorCell.cellData.getNeighbors())
             {
                 MapCell obj = board.getCellAtPos(surroundingcell.x, surroundingcell.y);
 
@@ -255,7 +255,7 @@ public class CombatManager : MonoBehaviour
                 turnPlayer = 0;
                 turn++;
             }
-            getTurnPlayer().StartTurn();
+            getTurnPlayer().StartTurn(this);
             switchTarget(getTurnPlayer());
         }
     }

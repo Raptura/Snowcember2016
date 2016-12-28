@@ -170,7 +170,7 @@ public class Cell
     /// Gets all neighbors
     /// </summary>
     /// <returns></returns>
-    public List<Cell> getNeightbors()
+    public List<Cell> getNeighbors()
     {
         return getAllInRadius(1);
     }
@@ -187,7 +187,7 @@ public class Cell
         if (dirX < -1 || dirX > 1)
             throw new ArgumentException("The directions must be within -1 and 1");
 
-        foreach (Cell cell in getNeightbors())
+        foreach (Cell cell in getNeighbors())
         {
             if (cell.x == this.x + dirX && cell.y == this.y + dirY)
                 return cell;

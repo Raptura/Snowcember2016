@@ -4,14 +4,17 @@ using UnityEngine;
 
 public class MapUnit : MonoBehaviour
 {
-    public string name;
+    public string unitName;
     public Unit unitScript;
+    public ControlScript controlScript;
 
     public bool isDead { get { return health == 0; } }
     public int health { get; set; }
     public int startPosX, startPosY;
 
     public bool isPlayerControlled;
+
+    public float lastAction;
 
     [HideInInspector]
     public MapCell pos;
@@ -27,6 +30,7 @@ public class MapUnit : MonoBehaviour
     void Start()
     {
         health = unitScript.maxHealth;
+        lastAction = Mathf.NegativeInfinity;
     }
 
     // Update is called once per frame
@@ -55,13 +59,15 @@ public class MapUnit : MonoBehaviour
         conductedTurn = true;
         canMove = false;
         canAttack = false;
+        lastAction = Time.time;
     }
 
     /// <summary>
     /// Initialize The turn
     /// </summary>
-    public void StartTurn()
+    public void StartTurn(CombatManager instance)
     {
+        controlScript.init(this, instance);
         conductedTurn = false;
         canMove = true;
         canAttack = true;
@@ -76,6 +82,7 @@ public class MapUnit : MonoBehaviour
         {
             pos = cell;
             canMove = false;
+            lastAction = Time.time;
         }
     }
 
@@ -87,12 +94,13 @@ public class MapUnit : MonoBehaviour
         {
             handleAttack(target, instance);
             canAttack = false;
+            lastAction = Time.time;
         }
     }
 
     public void TurnUpdate()
     {
-
+        controlScript.TurnPattern();
     }
 
     public void handleAttack(MapCell target, CombatManager instance)
@@ -139,7 +147,7 @@ public class MapUnit : MonoBehaviour
         {
             int dist = Cell.getDist(pos.cellData, target.cellData);
 
-            foreach (Cell surroundingcell in target.cellData.getNeightbors())
+            foreach (Cell surroundingcell in target.cellData.getNeighbors())
             {
                 MapCell obj = instance.board.getCellAtPos(surroundingcell.x, surroundingcell.y);
 
