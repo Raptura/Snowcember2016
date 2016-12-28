@@ -21,18 +21,19 @@ public class CombatManager : MonoBehaviour
     float lastMoved;
     float moveDelay = 0.25f;
 
-    private enum HighlightMode
+    public enum HighlightMode
     {
         Standard,
         Attack,
         Movement
     }
-    private HighlightMode highlightMode;
+    public HighlightMode highlightMode;
 
     void Start()
     {
         lastMoved = Mathf.NegativeInfinity;
         turn = 1;
+        units = new List<MapUnit>();
         foreach (MapUnit m_unit in FindObjectsOfType<MapUnit>())
         {
             units.Add(m_unit);
@@ -41,10 +42,6 @@ public class CombatManager : MonoBehaviour
         cursorPos = new Vector2(0, 0);
         turnPlayer = 0;
 
-        foreach (MapUnit unit in units)
-        {
-            unit.pos = board.getCellAtPos(unit.startPosX, unit.startPosY);
-        }
         switchTarget(getTurnPlayer());
         getTurnPlayer().StartTurn(this);
         highlightMode = HighlightMode.Standard;
@@ -56,10 +53,6 @@ public class CombatManager : MonoBehaviour
         if (getTurnPlayer().isPlayerControlled)
         {
             handleInput();
-        }
-        else
-        {
-            switchTarget(getTurnPlayer());
         }
         manageHighlights();
     }
@@ -145,8 +138,6 @@ public class CombatManager : MonoBehaviour
 
     void manageHighlights()
     {
-        //Always highlight current turn player
-        highlightCurrentTurnPlayer();
 
         if (highlightMode == HighlightMode.Movement)
             highlightCurrentPlayerMovement();
@@ -162,11 +153,6 @@ public class CombatManager : MonoBehaviour
         highlightCell.GetComponent<SpriteRenderer>().color = Color.yellow;
     }
 
-    void highlightCurrentTurnPlayer()
-    {
-        getTurnPlayer().GetComponent<SpriteRenderer>().color = Color.magenta;
-    }
-
     void highlightCurrentPlayerMovement()
     {
         MapUnit highlightUnit = getTurnPlayer();
@@ -175,7 +161,8 @@ public class CombatManager : MonoBehaviour
 
         foreach (MapCell m_cell in cellsToHighlight)
         {
-            m_cell.GetComponent<SpriteRenderer>().color = new Color(150f / 255f, 255f / 255f, 0f);
+            if (m_cell.passable)
+                m_cell.GetComponent<SpriteRenderer>().color = new Color(150f / 255f, 255f / 255f, 0f);
         }
     }
 
@@ -190,7 +177,8 @@ public class CombatManager : MonoBehaviour
 
             foreach (MapCell m_cell in cellsToHighlight)
             {
-                m_cell.GetComponent<SpriteRenderer>().color = new Color(255f / 255f, 192f / 255f, 203f / 255f);
+                if (m_cell.passable)
+                    m_cell.GetComponent<SpriteRenderer>().color = new Color(255f / 255f, 192f / 255f, 203f / 255f);
             }
         }
 
@@ -208,10 +196,13 @@ public class CombatManager : MonoBehaviour
                 {
                     cell = board.getCellAtPos(cell.cellData.getNeighbor(dir).x, cell.cellData.getNeighbor(dir).y);
 
-                    if (dist - Cell.getDist(cell.cellData, cursorCell.cellData) < getTurnPlayer().unitScript.range)
-                        cell.gameObject.GetComponent<SpriteRenderer>().color = Color.red;
-                    else
-                        cell.gameObject.GetComponent<SpriteRenderer>().color = Color.cyan;
+                    if (cell.passable)
+                    {
+                        if (dist - Cell.getDist(cell.cellData, cursorCell.cellData) < getTurnPlayer().unitScript.range)
+                            cell.gameObject.GetComponent<SpriteRenderer>().color = Color.red;
+                        else
+                            cell.gameObject.GetComponent<SpriteRenderer>().color = Color.cyan;
+                    }
                 }
                 else
                     break;
@@ -347,7 +338,7 @@ public class CombatManager : MonoBehaviour
     /// Switches the target of the camera as well as the cursor position to a desired MapUnit obj
     /// </summary>
     /// <param name="unit">The target Map Unit</param>
-    void switchTarget(MapUnit unit)
+    public void switchTarget(MapUnit unit)
     {
         //Change the cursor position to the current 
         cursorPos = new Vector2(unit.pos.cellData.x, unit.pos.cellData.y);

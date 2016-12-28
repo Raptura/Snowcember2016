@@ -13,6 +13,7 @@ public class MapUnit : MonoBehaviour
     public int startPosX, startPosY;
 
     public bool isPlayerControlled;
+    public bool isEnemy;
 
     public float lastAction;
 
@@ -21,7 +22,7 @@ public class MapUnit : MonoBehaviour
 
 
     [HideInInspector]
-    public bool conductedTurn = false;
+    public bool conductedTurn;
     [HideInInspector]
     public bool canMove, canAttack;
 
@@ -31,12 +32,14 @@ public class MapUnit : MonoBehaviour
     {
         health = unitScript.maxHealth;
         lastAction = Mathf.NegativeInfinity;
+        conductedTurn = true;
     }
 
     // Update is called once per frame
     void Update()
     {
         maintainPos();
+        highlightIfTurnPlayer();
     }
 
     /// <summary>
@@ -79,7 +82,7 @@ public class MapUnit : MonoBehaviour
     {
         int dist = Cell.getDist(cell.cellData, pos.cellData);
 
-        if (canMove && dist <= unitScript.mov)
+        if (canMove && dist <= unitScript.mov && cell.passable)
         {
             pos = cell;
             canMove = false;
@@ -164,5 +167,13 @@ public class MapUnit : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void highlightIfTurnPlayer()
+    {
+        if (!conductedTurn)
+            GetComponent<SpriteRenderer>().color = Color.magenta;
+        else
+            GetComponent<SpriteRenderer>().color = Color.white;
     }
 }

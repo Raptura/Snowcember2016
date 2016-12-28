@@ -87,9 +87,12 @@ public class HexGrid : ScriptableObject
     public List<Cell> createCellGroup(int x, int y, int width, int height)
     {
         List<Cell> created = new List<Cell>();
-        for (int mx = 0; mx <= width; mx++)
+        int w = (int)((float)width / 2f);
+        int h = (int)((float)height / 2f);
+
+        for (int mx = -w; mx <= w; mx++)
         {
-            for (int my = 0; my <= height; my++)
+            for (int my = -h; my <= h; my++)
             {
                 Cell newCell = Cell.createCell(mx + x, my + y);
                 newCell.grid = this;

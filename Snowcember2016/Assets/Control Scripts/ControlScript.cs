@@ -7,7 +7,7 @@ public abstract class ControlScript : ScriptableObject
     /// <summary>
     /// The time it takes for an Ai script to make a move
     /// </summary>
-    public const float AITimer = 4f;
+    public const float AITimer = 2f;
 
     protected MapUnit myUnit;
     protected CombatManager combatInstance;

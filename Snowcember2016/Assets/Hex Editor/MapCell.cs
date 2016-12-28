@@ -8,6 +8,7 @@ using UnityEngine;
 public class MapCell : MonoBehaviour
 {
     public Cell cellData;
+    public bool passable;
 
     /// <summary>
     /// Creates the cell.

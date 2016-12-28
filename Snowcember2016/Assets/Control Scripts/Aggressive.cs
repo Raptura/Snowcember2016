@@ -8,12 +8,29 @@ public class Aggressive : ControlScript
 
     public override void AttackPattern()
     {
-
+        if (getNearestEnemyUnit() != null)
+        {
+            int dist = Cell.getDist(myUnit.pos.cellData, getNearestEnemyUnit().pos.cellData);
+            if (dist <= myUnit.unitScript.range)
+            {
+                myUnit.Attack(getNearestEnemyUnit().pos, combatInstance);
+            }
+            else
+            {
+                myUnit.canAttack = false;
+                myUnit.lastAction = Mathf.NegativeInfinity;
+            }
+        }
+        else
+        {
+            myUnit.canAttack = false;
+            myUnit.lastAction = Mathf.NegativeInfinity;
+        }
     }
 
     public override void MovePattern()
     {
-        MapUnit nearest = getNearestUnit();
+        MapUnit nearest = getNearestEnemyUnit();
         MapCell nearestCell = myUnit.pos;
         if (nearest != null)
             nearestCell = getClosestCell(nearest.pos, myUnit.pos, myUnit.unitScript.mov);
@@ -34,7 +51,7 @@ public class Aggressive : ControlScript
         }
         if (Time.time - myUnit.lastAction > AITimer)
         {
-            if (myUnit.canMove == false)
+            if (!myUnit.canMove && !myUnit.canAttack)
             {
                 myUnit.EndTurn();
             }
@@ -42,14 +59,14 @@ public class Aggressive : ControlScript
 
     }
 
-    public MapUnit getNearestUnit()
+    public MapUnit getNearestEnemyUnit()
     {
         MapUnit result = null;
         int lowestDist = 999; //Arbitrarily Huge Number
 
         foreach (MapUnit unit in combatInstance.units)
         {
-            if (unit != myUnit)
+            if (unit != myUnit && unit.isEnemy != myUnit.isEnemy)
             {
                 int dist = Cell.getDist(unit.pos.cellData, myUnit.pos.cellData);
                 if (dist < lowestDist)
@@ -65,6 +82,7 @@ public class Aggressive : ControlScript
     public MapCell getClosestCell(MapCell to, MapCell from, int dist)
     {
         int cellDist = Cell.getDist(to.cellData, from.cellData);
+
         if (cellDist > dist)
         {
             MapCell[] path = findPath(to, from);
@@ -96,10 +114,13 @@ public class Aggressive : ControlScript
                 if (neighbors != null)
                 {
                     MapCell m_cell = combatInstance.board.getCellAtPos(neighbors.x, neighbors.y);
-                    if (!cameFrom.ContainsKey(m_cell))
+                    if (m_cell.passable)
                     {
-                        frontier.Enqueue(m_cell);
-                        cameFrom.Add(m_cell, current);
+                        if (!cameFrom.ContainsKey(m_cell))
+                        {
+                            frontier.Enqueue(m_cell);
+                            cameFrom.Add(m_cell, current);
+                        }
                     }
                 }
             }
