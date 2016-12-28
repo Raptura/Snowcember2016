@@ -51,7 +51,7 @@ public class MapUnit : MonoBehaviour
 
     public void maintainPos()
     {
-        transform.position = pos.transform.position;
+        transform.position = Vector3.Lerp(transform.position, pos.transform.position, Time.deltaTime);
     }
 
     public void EndTurn()
@@ -67,6 +67,7 @@ public class MapUnit : MonoBehaviour
     /// </summary>
     public void StartTurn(CombatManager instance)
     {
+        lastAction = Time.time;
         controlScript.init(this, instance);
         conductedTurn = false;
         canMove = true;

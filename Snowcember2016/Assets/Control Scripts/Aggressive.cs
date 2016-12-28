@@ -32,9 +32,12 @@ public class Aggressive : ControlScript
         {
             AttackPattern();
         }
-        if (myUnit.canMove == false)
+        if (Time.time - myUnit.lastAction > AITimer)
         {
-            myUnit.EndTurn();
+            if (myUnit.canMove == false)
+            {
+                myUnit.EndTurn();
+            }
         }
 
     }
@@ -64,8 +67,8 @@ public class Aggressive : ControlScript
         int cellDist = Cell.getDist(to.cellData, from.cellData);
         if (cellDist > dist)
         {
-            MapCell[] path = findPath(to, from).ToArray();
-            return path[dist];
+            MapCell[] path = findPath(to, from);
+            return path[dist - 1];
         }
         else
         {
@@ -73,37 +76,44 @@ public class Aggressive : ControlScript
         }
     }
 
-    public List<MapCell> findPath(MapCell to, MapCell from)
+    public MapCell[] findPath(MapCell to, MapCell from)
     {
-        List<MapCell> path = new List<MapCell>();
-        path.Add(from);
+        Queue<MapCell> frontier = new Queue<MapCell>();
+        frontier.Enqueue(from);
 
-        List<MapCell> traversed = new List<MapCell>();
-        traversed.Add(from);
-
-        while (traversed.Count != 0)
+        Dictionary<MapCell, MapCell> cameFrom = new Dictionary<MapCell, MapCell>();
+        MapCell current = frontier.Peek();
+        while (frontier.Count > 0)
         {
-            MapCell current = traversed.ToArray()[traversed.Count - 1];
-            traversed.RemoveAt(traversed.Count - 1);
+            current = frontier.Dequeue();
 
             if (current == to)
                 break;
 
-            Cell cell = from.cellData;
+            Cell cell = current.cellData;
             foreach (Cell neighbors in cell.getNeighbors())
             {
                 if (neighbors != null)
                 {
                     MapCell m_cell = combatInstance.board.getCellAtPos(neighbors.x, neighbors.y);
-                    if (traversed.Contains(m_cell) == false)
+                    if (!cameFrom.ContainsKey(m_cell))
                     {
-                        path.Add(m_cell);
-                        traversed.Add(current);
+                        frontier.Enqueue(m_cell);
+                        cameFrom.Add(m_cell, current);
                     }
                 }
             }
         }
 
-        return path;
+        List<MapCell> path = new List<MapCell>();
+        path.Add(current);
+        while (current != from)
+        {
+            current = cameFrom[current];
+            path.Add(current);
+        }
+        path.Reverse();
+
+        return path.ToArray();
     }
 }
