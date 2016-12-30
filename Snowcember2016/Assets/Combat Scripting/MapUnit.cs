@@ -191,7 +191,7 @@ public class MapUnit : MonoBehaviour
     public void highlightIfTurnPlayer()
     {
         if (!conductedTurn)
-            GetComponent<SpriteRenderer>().color = Color.magenta;
+            GetComponent<SpriteRenderer>().color = new Color(150f / 255f, 100f / 255f, 200f / 255f);
         else
             GetComponent<SpriteRenderer>().color = Color.white;
     }
