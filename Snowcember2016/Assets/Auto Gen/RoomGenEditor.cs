@@ -19,6 +19,12 @@ public class RoomGenEditor : Editor
         SerializedProperty cam = serializedObject.FindProperty("cam");
         EditorGUILayout.PropertyField(cam, true);
 
+        SerializedProperty playerScript = serializedObject.FindProperty("playerScript");
+        EditorGUILayout.PropertyField(playerScript, true);
+
+        SerializedProperty isAuto = serializedObject.FindProperty("isAuto");
+        EditorGUILayout.PropertyField(isAuto, true);
+
         gen.hasFlatTop = EditorGUILayout.Toggle("Has Flat Top", gen.hasFlatTop);
         gen.cellSize = EditorGUILayout.FloatField("Cell Size", gen.cellSize);
 
@@ -81,8 +87,14 @@ public class RoomGenEditor : Editor
         SerializedProperty enemyUnits = serializedObject.FindProperty("enemyUnits");
         EditorGUILayout.PropertyField(enemyUnits, true);
 
+        SerializedProperty enemyScripts = serializedObject.FindProperty("enemyScripts");
+        EditorGUILayout.PropertyField(enemyScripts, true);
+
         SerializedProperty friendlyUnits = serializedObject.FindProperty("friendlyUnits");
         EditorGUILayout.PropertyField(friendlyUnits, true);
+
+        SerializedProperty friendlyScripts = serializedObject.FindProperty("friendlyScripts");
+        EditorGUILayout.PropertyField(friendlyScripts, true);
 
         serializedObject.ApplyModifiedProperties();
     }

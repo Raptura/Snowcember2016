@@ -12,6 +12,7 @@ public class Cell
 
     public enum Direction
     {
+        None,
         North,
         NorthEast,
         NorthWest,
@@ -184,7 +185,7 @@ public class Cell
     /// <exception cref="ArgumentException">The directions must be within -1 and 1</exception>
     public Cell getNeighbor(int dirX, int dirY)
     {
-        if (dirX < -1 || dirX > 1)
+        if (dirX < -2 || dirX > 2 || dirY < -2 || dirY > 2)
             throw new ArgumentException("The directions must be within -1 and 1");
 
         foreach (Cell cell in getNeighbors())
@@ -209,7 +210,7 @@ public class Cell
                 if (grid.hasFlatTop)
                     return getNeighbor(0, -1);
                 else
-                    return null;
+                    return getNeighbor(1, 1);
 
             case Direction.NorthEast:
                 if (grid.hasFlatTop)
@@ -226,7 +227,7 @@ public class Cell
                 if (grid.hasFlatTop)
                     return getNeighbor(0, 1);
                 else
-                    return null;
+                    return getNeighbor(-1, -1);
 
             case Direction.SouthEast:
                 if (grid.hasFlatTop)
@@ -242,12 +243,12 @@ public class Cell
 
             case Direction.West:
                 if (grid.hasFlatTop)
-                    return null;
+                    return getNeighbor(-2, 1);
                 else
                     return getNeighbor(-1, 1);
             case Direction.East:
                 if (grid.hasFlatTop)
-                    return null;
+                    return getNeighbor(2, -1);
                 else
                     return getNeighbor(1, -1);
 
@@ -281,44 +282,51 @@ public class Cell
     public Direction getDirection(Cell target)
     {
         if (target == null || (target.x == x && target.y == y))
-            return Direction.SouthWest;
+            return Direction.North;
 
         if (grid.hasFlatTop)
         {
+            //good
             if (target.x == x && target.y < y)
                 return Direction.North;
+            //good
             if (target.x == x && target.y > y)
                 return Direction.South;
-
+            //good
             if (target.x < x && target.y == y)
                 return Direction.NorthWest;
+            //good
             if (target.x > x && target.y == y)
                 return Direction.SouthEast;
 
-            if (target.x >= x && target.y <= y)
+            if (target.x > x && target.y < y)
                 return Direction.NorthEast;
-            if (target.x <= x && target.y >= y)
+            if (target.x < x && target.y > y)
                 return Direction.SouthWest;
         }
         else
         {
-            if (target.x >= x && target.y <= y)
-                return Direction.East;
-            if (target.x <= x && target.y >= y)
-                return Direction.West;
-
+            //good
             if (target.x > x && target.y == y)
                 return Direction.NorthEast;
+            //good
             if (target.x < x && target.y == y)
                 return Direction.SouthWest;
-
+            //good
             if (target.x == x && target.y > y)
                 return Direction.NorthWest;
+            //good
             if (target.x == x && target.y < y)
                 return Direction.SouthEast;
+
+            if (target.x > x && target.y < y)
+                return Direction.East;
+            if (target.x < x && target.y > y)
+                return Direction.West;
+
         }
 
-        return Direction.North;
+        return Direction.None;
 
     }
 }

@@ -31,25 +31,36 @@ public class Aggressive : ControlScript
     public override void MovePattern()
     {
         MapUnit nearest = getNearestEnemyUnit();
-        MapCell nearestCell = myUnit.pos;
-        if (nearest != null)
-            nearestCell = getClosestCell(nearest.pos, myUnit.pos, myUnit.unitScript.mov);
+        MapCell movCell = myUnit.pos;
 
-        myUnit.Move(nearestCell);
+        if (nearest != null)
+            movCell = getClosestCell(nearest.pos, myUnit.pos, myUnit.unitScript.mov);
+
+        if (movCell != myUnit.pos)
+        {
+            myUnit.Move(movCell, combatInstance);
+            //Debug.Log("Moving!");
+        }
+        else
+        {
+            myUnit.canMove = false;
+            myUnit.lastAction = Mathf.NegativeInfinity;
+            //Debug.Log("Staying in Place");
+        }
 
     }
 
     public override void TurnPattern()
     {
-        if (Time.time - myUnit.lastAction > AITimer)
+        if (myUnit.canMove && Time.time - myUnit.lastAction > AITimer)
         {
             MovePattern();
         }
-        if (Time.time - myUnit.lastAction > AITimer)
+        else if (myUnit.canAttack && Time.time - myUnit.lastAction > AITimer)
         {
             AttackPattern();
         }
-        if (Time.time - myUnit.lastAction > AITimer)
+        else if (Time.time - myUnit.lastAction > AITimer)
         {
             if (!myUnit.canMove && !myUnit.canAttack)
             {
@@ -57,84 +68,5 @@ public class Aggressive : ControlScript
             }
         }
 
-    }
-
-    public MapUnit getNearestEnemyUnit()
-    {
-        MapUnit result = null;
-        int lowestDist = 999; //Arbitrarily Huge Number
-
-        foreach (MapUnit unit in combatInstance.units)
-        {
-            if (unit != myUnit && unit.isEnemy != myUnit.isEnemy)
-            {
-                int dist = Cell.getDist(unit.pos.cellData, myUnit.pos.cellData);
-                if (dist < lowestDist)
-                {
-                    lowestDist = dist;
-                    result = unit;
-                }
-            }
-        }
-        return result;
-    }
-
-    public MapCell getClosestCell(MapCell to, MapCell from, int dist)
-    {
-        int cellDist = Cell.getDist(to.cellData, from.cellData);
-
-        if (cellDist > dist)
-        {
-            MapCell[] path = findPath(to, from);
-            return path[dist - 1];
-        }
-        else
-        {
-            return to;
-        }
-    }
-
-    public MapCell[] findPath(MapCell to, MapCell from)
-    {
-        Queue<MapCell> frontier = new Queue<MapCell>();
-        frontier.Enqueue(from);
-
-        Dictionary<MapCell, MapCell> cameFrom = new Dictionary<MapCell, MapCell>();
-        MapCell current = frontier.Peek();
-        while (frontier.Count > 0)
-        {
-            current = frontier.Dequeue();
-
-            if (current == to)
-                break;
-
-            Cell cell = current.cellData;
-            foreach (Cell neighbors in cell.getNeighbors())
-            {
-                if (neighbors != null)
-                {
-                    MapCell m_cell = combatInstance.board.getCellAtPos(neighbors.x, neighbors.y);
-                    if (m_cell.passable)
-                    {
-                        if (!cameFrom.ContainsKey(m_cell))
-                        {
-                            frontier.Enqueue(m_cell);
-                            cameFrom.Add(m_cell, current);
-                        }
-                    }
-                }
-            }
-        }
-
-        List<MapCell> path = new List<MapCell>();
-        path.Add(current);
-        while (current != from)
-        {
-            current = cameFrom[current];
-            path.Add(current);
-        }
-        path.Reverse();
-
-        return path.ToArray();
     }
 }

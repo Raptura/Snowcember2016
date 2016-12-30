@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class CombatManager : MonoBehaviour
 {
@@ -10,7 +11,7 @@ public class CombatManager : MonoBehaviour
     //[HideInInspector]
     public List<MapUnit> units;
     private List<MapUnit> turnOrder;
-    private int turnPlayer = 0;
+    private int turnPlayerIndex = 0;
 
     [HideInInspector]
     public int turn;
@@ -18,8 +19,12 @@ public class CombatManager : MonoBehaviour
     private Vector2 cursorPos;
     private Cell.Direction direction;
 
-    float lastMoved;
-    float moveDelay = 0.25f;
+    private float lastMoved;
+    private float moveDelay = 0.25f;
+
+    bool gameOverWin, gameOverLose;
+
+    public bool auto = false;
 
     public enum HighlightMode
     {
@@ -33,6 +38,7 @@ public class CombatManager : MonoBehaviour
     {
         lastMoved = Mathf.NegativeInfinity;
         turn = 1;
+        gameOverWin = gameOverLose = false;
         units = new List<MapUnit>();
         foreach (MapUnit m_unit in FindObjectsOfType<MapUnit>())
         {
@@ -40,7 +46,7 @@ public class CombatManager : MonoBehaviour
         }
         turnOrder = getTurnOrder();
         cursorPos = new Vector2(0, 0);
-        turnPlayer = 0;
+        turnPlayerIndex = 0;
 
         switchTarget(getTurnPlayer());
         getTurnPlayer().StartTurn(this);
@@ -59,6 +65,52 @@ public class CombatManager : MonoBehaviour
 
     void OnGUI()
     {
+        if (!auto)
+        {
+            if (!gameOverWin && !gameOverLose)
+            {
+                gameplayUI();
+            }
+            else
+            {
+                gameOverUI();
+            }
+        }
+    }
+
+    void gameplayUI()
+    {
+        GUIStyle turnText = new GUIStyle(GUI.skin.box);
+        turnText.fontSize = 30;
+        turnText.normal.textColor = Color.black;
+
+        GUI.Box(new Rect(Screen.width - 100, 0, 100, 50), "Turn: " + turn, turnText);
+
+        string UIText = "";
+        UIText += "Unit Name: " + getTurnPlayer().unitName + "\n";
+        UIText += "Health: " + getTurnPlayer().health + "/" + getTurnPlayer().unitScript.maxHealth + "\n";
+        UIText += "Attack Type: " + getTurnPlayer().unitScript.attackType.ToString() + "\n";
+        UIText += "Movement: " + getTurnPlayer().unitScript.mov + "\n";
+        UIText += "Range: " + getTurnPlayer().unitScript.range + "\n";
+        UIText += "Damage: " + getTurnPlayer().unitScript.damage + "\n";
+
+        GUI.Box(new Rect(Screen.width - 200, 50, 200, 100), UIText);
+
+        if (getCursorUnit() != null && getCursorUnit() != getTurnPlayer())
+        {
+            MapUnit cursorUnit = getCursorUnit();
+            string cursorText = "";
+            cursorText += "Unit Name: " + cursorUnit.unitName + "\n";
+            cursorText += "Health: " + cursorUnit.health + "/" + cursorUnit.unitScript.maxHealth + "\n";
+            cursorText += "Attack Type: " + cursorUnit.unitScript.attackType.ToString() + "\n";
+            cursorText += "Movement: " + cursorUnit.unitScript.mov + "\n";
+            cursorText += "Range: " + cursorUnit.unitScript.range + "\n";
+            cursorText += "Damage: " + cursorUnit.unitScript.damage + "\n";
+
+            GUI.Box(new Rect(Screen.width - 200, 150, 200, 100), cursorText);
+
+        }
+
         if (getTurnPlayer().isPlayerControlled)
         {
             if (GUI.Button(new Rect(0, 0, 200, 100), "View Move Range"))
@@ -69,7 +121,7 @@ public class CombatManager : MonoBehaviour
             {
                 if (GUI.Button(new Rect(200, 0, 100, 100), "Move"))
                 {
-                    getTurnPlayer().Move(getCurrCell());
+                    getTurnPlayer().Move(getCurrCell(), this);
                 }
             }
 
@@ -94,8 +146,43 @@ public class CombatManager : MonoBehaviour
             {
                 switchTarget(getTurnPlayer());
             }
-            string UIText = "Health " + getTurnPlayer().health + "/" + getTurnPlayer().unitScript.maxHealth;
-            GUI.TextField(new Rect(0, 400, 200, 100), UIText);
+        }
+    }
+
+    void gameOverUI()
+    {
+
+        GUIStyle styling = new GUIStyle(GUI.skin.box);
+        styling.fontSize = 30;
+        styling.normal.textColor = Color.black;
+        styling.alignment = TextAnchor.MiddleCenter;
+        styling.wordWrap = true;
+
+        int width = 300;
+        int height = 300;
+
+        Rect bounds = new Rect(new Vector2((Screen.width / 2) - (width / 2), (Screen.height / 2) - (height / 2)), new Vector2(width, height));
+
+        string infoText = "";
+        infoText += "Turn: " + turn;
+        if (gameOverWin)
+        {
+            string congratulation = "Congratulations! You've Won! \n";
+            GUI.Box(bounds, congratulation + infoText, styling);
+        }
+        else if (gameOverLose)
+        {
+            string sorry = "Sorry! Try Again? \n";
+            GUI.Box(bounds, sorry + infoText, styling);
+        }
+
+        if (GUI.Button(new Rect(bounds.x, bounds.yMax, 100, 100), "Replay?"))
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
+        if (GUI.Button(new Rect(bounds.x + 100, bounds.yMax, 100, 100), "Main Menu"))
+        {
+            SceneManager.LoadScene((int)GameManager.SceneBuild.MainMenu);
         }
     }
 
@@ -190,22 +277,25 @@ public class CombatManager : MonoBehaviour
             int dist = Cell.getDist(cell.cellData, cursorCell.cellData);
             Cell.Direction dir = cell.cellData.getDirection(cursorCell.cellData);
 
-            for (int i = 0; i < dist; i++)
+            if (dir != Cell.Direction.None)
             {
-                if (cell.cellData.getNeighbor(dir) != null)
+                for (int i = 0; i < dist; i++)
                 {
-                    cell = board.getCellAtPos(cell.cellData.getNeighbor(dir).x, cell.cellData.getNeighbor(dir).y);
-
-                    if (cell.passable)
+                    if (cell.cellData.getNeighbor(dir) != null)
                     {
-                        if (dist - Cell.getDist(cell.cellData, cursorCell.cellData) < getTurnPlayer().unitScript.range)
-                            cell.gameObject.GetComponent<SpriteRenderer>().color = Color.red;
-                        else
-                            cell.gameObject.GetComponent<SpriteRenderer>().color = Color.cyan;
+                        cell = board.getCellAtPos(cell.cellData.getNeighbor(dir).x, cell.cellData.getNeighbor(dir).y);
+
+                        if (cell.passable)
+                        {
+                            if (dist - Cell.getDist(cell.cellData, cursorCell.cellData) < getTurnPlayer().unitScript.range)
+                                cell.gameObject.GetComponent<SpriteRenderer>().color = Color.red;
+                            else
+                                cell.gameObject.GetComponent<SpriteRenderer>().color = Color.cyan;
+                        }
                     }
+                    else
+                        break;
                 }
-                else
-                    break;
             }
         }
 
@@ -239,11 +329,12 @@ public class CombatManager : MonoBehaviour
         }
         else
         {
-            if (turnPlayer != turnOrder.Count - 1)
-                turnPlayer++;
+            checkGameOver();
+            if (turnPlayerIndex != turnOrder.Count - 1)
+                turnPlayerIndex++;
             else
             {
-                turnPlayer = 0;
+                turnPlayerIndex = 0;
                 turn++;
             }
             getTurnPlayer().StartTurn(this);
@@ -348,11 +439,82 @@ public class CombatManager : MonoBehaviour
 
     private MapUnit getTurnPlayer()
     {
-        return turnOrder.ToArray()[turnPlayer];
+        return turnOrder.ToArray()[turnPlayerIndex];
     }
 
     private MapCell getCurrCell()
     {
         return board.getCellAtPos((int)cursorPos.x, (int)cursorPos.y);
+    }
+
+    public void setCurrCell(MapCell cell)
+    {
+        cursorPos.x = cell.cellData.x;
+        cursorPos.y = cell.cellData.y;
+        MapCell m_cell = board.getCellAtPos((int)cursorPos.x, (int)cursorPos.y);
+        cam.target = m_cell.transform;
+    }
+
+    public bool isEmptyCell(MapCell cell)
+    {
+        foreach (MapUnit unit in units)
+        {
+            if (unit.pos == cell)
+                return false;
+        }
+        return true;
+    }
+
+    private MapUnit getCursorUnit()
+    {
+        MapCell cell = getCurrCell();
+        foreach (MapUnit unit in units)
+        {
+            if (unit.pos == cell)
+                return unit;
+        }
+        return null;
+    }
+
+    private void checkGameOver()
+    {
+        gameOverWin = checkPlayerWin();
+        gameOverLose = checkEnemyWin();
+
+        if (auto)
+        {
+            if (gameOverWin || gameOverLose)
+                SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
+    }
+
+    private bool checkPlayerWin()
+    {
+        bool result = true;
+        foreach (MapUnit unit in units)
+        {
+            if (!unit.isDead && unit.isEnemy == true)
+            {
+                result = false;
+            }
+
+        }
+
+        return result;
+    }
+
+    bool checkEnemyWin()
+    {
+        bool result = true;
+        foreach (MapUnit unit in units)
+        {
+            if (!unit.isDead && unit.isEnemy == false)
+            {
+                result = false;
+            }
+
+        }
+
+        return result;
     }
 }

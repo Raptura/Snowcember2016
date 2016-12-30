@@ -1,0 +1,15 @@
+Mouse To Click Buttons
+WASD -- Movement
+
+Objective: Defeat all the enemy Units!
+
+Unit Info:
+Movement: How far the unit can move.
+Range: How far a unit can perform an attack.
+Damage: How much damage a unit's attack will do.
+
+Attack Types:
+Point: Attack will be performed on the selected point on the map.
+Line: Attack will be performed on the first enemy in a specified direction.
+Spread: Attack will effect an area around the specified point on the map.
+

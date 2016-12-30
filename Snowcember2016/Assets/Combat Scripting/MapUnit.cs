@@ -9,7 +9,20 @@ public class MapUnit : MonoBehaviour
     public ControlScript controlScript;
 
     public bool isDead { get { return health == 0; } }
-    public int health { get; set; }
+    private int _health;
+    public int health
+    {
+        get { return _health; }
+        set
+        {
+            if (value < 0)
+            {
+                _health = 0;
+            }
+            else
+                _health = value;
+        }
+    }
     public int startPosX, startPosY;
 
     public bool isPlayerControlled;
@@ -40,6 +53,7 @@ public class MapUnit : MonoBehaviour
     {
         maintainPos();
         highlightIfTurnPlayer();
+        highlightIfDead();
     }
 
     /// <summary>
@@ -78,13 +92,15 @@ public class MapUnit : MonoBehaviour
 
     }
 
-    public void Move(MapCell cell)
+    public void Move(MapCell target, CombatManager instance)
     {
-        int dist = Cell.getDist(cell.cellData, pos.cellData);
+        int dist = Cell.getDist(target.cellData, pos.cellData);
 
-        if (canMove && dist <= unitScript.mov && cell.passable)
+        if (canMove && dist <= unitScript.mov && target.passable && instance.isEmptyCell(target))
         {
-            pos = cell;
+            instance.highlightMode = CombatManager.HighlightMode.Movement;
+            instance.setCurrCell(target);
+            pos = target;
             canMove = false;
             lastAction = Time.time;
         }
@@ -96,6 +112,9 @@ public class MapUnit : MonoBehaviour
 
         if (canAttack && dist <= unitScript.range)
         {
+            instance.highlightMode = CombatManager.HighlightMode.Attack;
+            instance.setCurrCell(target);
+
             handleAttack(target, instance);
             canAttack = false;
             lastAction = Time.time;
@@ -149,9 +168,9 @@ public class MapUnit : MonoBehaviour
 
         if (unitScript.attackType == Unit.AttackType.Spread)
         {
-            int dist = Cell.getDist(pos.cellData, target.cellData);
-
-            foreach (Cell surroundingcell in target.cellData.getNeighbors())
+            List<Cell> group = target.cellData.getNeighbors();
+            group.Add(target.cellData);
+            foreach (Cell surroundingcell in group)
             {
                 MapCell obj = instance.board.getCellAtPos(surroundingcell.x, surroundingcell.y);
 
@@ -176,4 +195,11 @@ public class MapUnit : MonoBehaviour
         else
             GetComponent<SpriteRenderer>().color = Color.white;
     }
+
+    public void highlightIfDead()
+    {
+        if (isDead)
+            GetComponent<SpriteRenderer>().color = Color.gray;
+    }
+
 }

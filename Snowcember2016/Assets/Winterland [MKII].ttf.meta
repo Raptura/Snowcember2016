@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 600507049fc8e5d44a4fdf8023330da7
+timeCreated: 1483055952
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Winterland [MKII]
+  fontNames:
+  - Winterland [MKII]
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

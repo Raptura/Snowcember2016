@@ -81,14 +81,23 @@
     <Compile Include="Assets\Combat Scripting\CombatManager.cs" />
     <Compile Include="Assets\Combat Scripting\MapUnit.cs" />
     <Compile Include="Assets\Control Scripts\Aggressive.cs" />
+    <Compile Include="Assets\Control Scripts\Conservative.cs" />
     <Compile Include="Assets\Control Scripts\ControlScript.cs" />
     <Compile Include="Assets\Control Scripts\PlayerControl.cs" />
+    <Compile Include="Assets\GameManager.cs" />
+    <Compile Include="Assets\GamecheeOpening.cs" />
+    <Compile Include="Assets\Generator.cs" />
     <Compile Include="Assets\Hex Editor\Cell.cs" />
     <Compile Include="Assets\Hex Editor\GridBaseEditor.cs" />
     <Compile Include="Assets\Hex Editor\HexGrid.cs" />
     <Compile Include="Assets\Hex Editor\HexGridBoard.cs" />
     <Compile Include="Assets\Hex Editor\MapCell.cs" />
+    <Compile Include="Assets\MainMenu.cs" />
     <Compile Include="Assets\Unit Scripts\Unit.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Assets\Resources\Credits.txt" />
+    <None Include="Assets\Resources\How To Play.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />
 </Project>

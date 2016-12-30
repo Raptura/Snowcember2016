@@ -35,6 +35,10 @@ public class RoomGen : MonoBehaviour
     public GameObject[] friendlyUnits;
     public HexGrid room;
     public CameraScript cam;
+    public ControlScript[] enemyScripts;
+    public ControlScript playerScript;
+    public ControlScript[] friendlyScripts;
+    public bool isAuto;
 
     private TileType[][] tiles;                               // A jagged array of tile types representing the board, like a grid.
     private EventType[][] events;                               // A jagged array of tile types representing the board, like a grid.
@@ -222,13 +226,20 @@ public class RoomGen : MonoBehaviour
 
         manager.cam = cam;
         manager.board = gridMap;
+        manager.auto = isAuto;
     }
 
     void setupEnemy(int x, int y)
     {
         GameObject unit = InstantiateFromArray(enemyUnits, x, y, enemyHolder);
         MapUnit m_unit = unit.GetComponent<MapUnit>();
+        //Add the Component for Control Script Randomly
+
         m_unit.isPlayerControlled = false;
+
+        int randomIndex = Random.Range(0, enemyScripts.Length);
+        m_unit.controlScript = enemyScripts[randomIndex];
+
         m_unit.isEnemy = true;
         m_unit.startPosX = x;
         m_unit.startPosY = y;
@@ -239,7 +250,16 @@ public class RoomGen : MonoBehaviour
     {
         GameObject unit = InstantiateFromArray(friendlyUnits, x, y, friendlyHolder);
         MapUnit m_unit = unit.GetComponent<MapUnit>();
-        m_unit.isPlayerControlled = true;
+        m_unit.isPlayerControlled = !isAuto;
+        if (!isAuto)
+            m_unit.controlScript = playerScript;
+        else
+        {
+            //add random script from arr
+
+            int randomIndex = Random.Range(0, friendlyScripts.Length);
+            m_unit.controlScript = friendlyScripts[randomIndex];
+        }
         m_unit.isEnemy = false;
         m_unit.startPosX = x;
         m_unit.startPosY = y;
@@ -255,10 +275,10 @@ public class RoomGen : MonoBehaviour
         while (enemiesPlaced < enemies)
         {
             int posx_min = xpos;
-            int posx_max = xpos + (int)((width) * (1f / enemies));
+            int posx_max = xpos + enemiesPlaced + 1;
 
             int posy_min = ypos;
-            int posy_max = xpos + (int)((height) * (1f / enemies));
+            int posy_max = ypos + enemiesPlaced + 1;
 
             int epos_x, epos_y;
 
@@ -271,6 +291,7 @@ public class RoomGen : MonoBehaviour
                 events[epos_x][epos_y] = EventType.Enemy;
                 enemiesPlaced++;
             }
+
         }
     }
 
@@ -280,10 +301,10 @@ public class RoomGen : MonoBehaviour
 
         while (friendliesPlaced < friendlyCount)
         {
-            int posx_min = (int)((width + xpos) * ((1 - (1f / friendlyCount))));
+            int posx_min = (int)((width + xpos)) - friendliesPlaced - 1;
             int posx_max = xpos + width;
 
-            int posy_min = (int)((height + ypos) * ((1 - (1f / friendlyCount))));
+            int posy_min = (int)((height + ypos)) - friendliesPlaced - 1;
             int posy_max = ypos + height;
 
             int epos_x, epos_y;
@@ -299,4 +320,5 @@ public class RoomGen : MonoBehaviour
             }
         }
     }
+
 }
