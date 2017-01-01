@@ -139,7 +139,7 @@ public class MapUnit : MonoBehaviour
                 if (unit.pos == target)
                 {
                     unit.handleDamage(this.unitScript);
-                    break;
+                    return;
                 }
             }
         }
@@ -161,12 +161,12 @@ public class MapUnit : MonoBehaviour
                         if (unit.pos == curr)
                         {
                             unit.handleDamage(this.unitScript);
-                            break;
+                            return;
                         }
                     }
                 }
                 else
-                    break;
+                    return;
             }
         }
 
