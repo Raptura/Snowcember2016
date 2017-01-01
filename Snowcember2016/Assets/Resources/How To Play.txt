@@ -1,5 +1,5 @@
 Mouse To Click Buttons
-WASD -- Movement
+WASD or Mouse to move cursor
 
 Objective: Defeat all the enemy Units!
 

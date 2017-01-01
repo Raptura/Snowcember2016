@@ -38,7 +38,7 @@ public class MapUnit : MonoBehaviour
     public bool conductedTurn;
     [HideInInspector]
     public bool canMove, canAttack;
-
+    private bool damageAnim;
 
     // Use this for initialization
     void Start()
@@ -46,6 +46,7 @@ public class MapUnit : MonoBehaviour
         health = unitScript.maxHealth;
         lastAction = Mathf.NegativeInfinity;
         conductedTurn = true;
+        damageAnim = false;
     }
 
     // Update is called once per frame
@@ -62,8 +63,11 @@ public class MapUnit : MonoBehaviour
     /// <param name="issuer">The unit issuing the damage</param>
     public void handleDamage(Unit issuer)
     {
-        health -= issuer.damage;
-        //Display Damage here
+        if (!isDead)
+        {
+            health -= issuer.damage;
+            CombatText.createCombatText("-" + issuer.damage, Color.black, 2f, pos.transform.position, Vector2.up);
+        }
     }
 
     public void maintainPos()

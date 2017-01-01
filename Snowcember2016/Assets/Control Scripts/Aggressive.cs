@@ -11,9 +11,29 @@ public class Aggressive : ControlScript
         if (getNearestEnemyUnit() != null)
         {
             int dist = Cell.getDist(myUnit.pos.cellData, getNearestEnemyUnit().pos.cellData);
+
             if (dist <= myUnit.unitScript.range)
             {
-                myUnit.Attack(getNearestEnemyUnit().pos, combatInstance);
+
+                if (myUnit.unitScript.attackType == Unit.AttackType.Line)
+                {
+                    Cell.Direction dir = myUnit.pos.cellData.getDirection(getNearestEnemyUnit().pos.cellData);
+                    if (dir != Cell.Direction.None)
+                    {
+                        if (combatInstance.board.grid.hasFlatTop && !(dir == Cell.Direction.East || dir == Cell.Direction.West) ||
+                            (!combatInstance.board.grid.hasFlatTop && !(dir == Cell.Direction.North || dir == Cell.Direction.South))
+                            == true)
+                        {
+                            myUnit.Attack(getNearestEnemyUnit().pos, combatInstance);
+                        }
+                    }
+                    else {
+                        myUnit.canAttack = false;
+                        myUnit.lastAction = Mathf.NegativeInfinity;
+                    }
+                }
+                else
+                    myUnit.Attack(getNearestEnemyUnit().pos, combatInstance);
             }
             else
             {

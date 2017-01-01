@@ -61,15 +61,48 @@ public abstract class ControlScript : ScriptableObject
     /// <param name="from">The origin</param>
     /// <param name="dist">The max distance you can go</param>
     /// <returns>The closest cell to the destination, if max distance is less than the distance of the two cells, returns the destination</returns>
-    public MapCell getClosestCell(MapCell to, MapCell from, int dist)
+    public MapCell getClosestCell(MapCell to, MapCell from, int dist, bool adjacentOnly = false)
     {
         int cellDist = Cell.getDist(to.cellData, from.cellData);
         MapCell[] path = findPath(to, from);
 
-        if (cellDist > dist)
-            return path[dist];
-        else
-            return path[(cellDist - 1) > 0 ? cellDist - 1 : 0];
+        if (!adjacentOnly)
+        {
+            for (int i = 0; i < path.Length; i++)
+            {
+                if (Cell.getDist(path[i].cellData, from.cellData) > dist)
+                    return path[i - 1 > 0 ? i - 1 : 0];
+            }
+            return path[path.Length - 1];
+        }
+        else {
+            //choose a path to work backwards from
+            int startIndex = path.Length - 1;
+            for (int i = 0; i < path.Length; i++)
+            {
+                if (Cell.getDist(path[i].cellData, from.cellData) > dist)
+                {
+                    startIndex = i - 1 > 0 ? i - 1 : 0;
+                    break;
+                }
+            }
+            //if you cant move anywhere thats adjacent, just dont move
+            for (int i = startIndex; i > 0; i--)
+            {
+                Cell.Direction dir = path[i].cellData.getDirection(path[startIndex - 1].cellData);
+                if (dir != Cell.Direction.None)
+                {
+                    if (combatInstance.board.grid.hasFlatTop && !(dir == Cell.Direction.East || dir == Cell.Direction.West) ||
+                        (!combatInstance.board.grid.hasFlatTop && !(dir == Cell.Direction.North || dir == Cell.Direction.South))
+                        == true)
+                    {
+                        startIndex = i;
+                        break;
+                    }
+                }
+            }
+            return path[startIndex];
+        }
 
     }
 

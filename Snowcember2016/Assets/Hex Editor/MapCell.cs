@@ -35,19 +35,7 @@ public class MapCell : MonoBehaviour
     /// </summary>
     public void maintainPos()
     {
-        float posX, posY;
-        if (cellData.grid.hasFlatTop)
-        {
-            posX = (float)cellData.x * (3f / 2f) * cellData.grid.cellSize;
-            posY = (((float)cellData.x / 2f) - (cellData.y + cellData.x)) * Mathf.Sqrt(3) * cellData.grid.cellSize;
-        }
-        else
-        {
-
-            posX = ((cellData.x) - ((float)(cellData.x + cellData.y) / 2f)) * Mathf.Sqrt(3) * cellData.grid.cellSize;
-            posY = (float)(cellData.y + cellData.x) * (3f / 2f) * cellData.grid.cellSize;
-        }
-        transform.localPosition = new Vector2(posX, posY);
+        transform.localPosition = cellData.grid.hexToPos(cellData.x, cellData.y);
     }
 
     /// <summary>

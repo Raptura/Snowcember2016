@@ -158,7 +158,9 @@ public class Cell
                 if (currentCell != null && currentCell != this)
                 {
                     if (getDist(this, currentCell) <= radius)
+                    {
                         neighbors.Add(currentCell);
+                    }
                 }
             }
         }
@@ -313,10 +315,10 @@ public class Cell
             if (target.x < x && target.y == y)
                 return Direction.SouthWest;
             //good
-            if (target.x == x && target.y > y)
+            if (target.x == x && target.y >= y)
                 return Direction.NorthWest;
             //good
-            if (target.x == x && target.y < y)
+            if (target.x == x && target.y <= y)
                 return Direction.SouthEast;
 
             if (target.x > x && target.y < y)

@@ -116,4 +116,42 @@ public class HexGrid : ScriptableObject
             cell.grid = this;
         }
     }
+
+
+    public Vector2 hexToPos(int x, int y)
+    {
+        float posX, posY;
+        if (hasFlatTop)
+        {
+            posX = (float)x * (3f / 2f) * cellSize;
+            posY = (((float)x / 2f) - (y + x)) * Mathf.Sqrt(3) * cellSize;
+        }
+        else
+        {
+
+            posX = ((x) - ((float)(x + y) / 2f)) * Mathf.Sqrt(3) * cellSize;
+            posY = (float)(y + x) * (3f / 2f) * cellSize;
+        }
+        return new Vector2(posX, posY);
+    }
+
+    public Cell posToHex(Vector2 pos)
+    {
+        float posX, posY;
+        if (hasFlatTop)
+        {
+            posX = pos.x * 2 / 3 / cellSize;
+            posY = (-pos.y * (Mathf.Sqrt(3) / 3) - pos.x / 3) / cellSize;
+        }
+        else
+        {
+            posX = (pos.x * (Mathf.Sqrt(3) / 3) + pos.y / 3) / cellSize;
+            posY = -pos.y * 2 / 3 / cellSize;
+        }
+        int x = Mathf.RoundToInt(posX);
+        int y = Mathf.RoundToInt(posY);
+
+        return getCellAtPos(x, -(x + y));
+    }
+
 }

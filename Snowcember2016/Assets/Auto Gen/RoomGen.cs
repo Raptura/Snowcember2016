@@ -111,6 +111,7 @@ public class RoomGen : MonoBehaviour
         height = (int)Random.Range(roomWidth.min, roomHeight.max);
         room.createCellGroup(0, 0, columns, rows);
         room.linkCells();
+        gridMap.cells = new System.Collections.Generic.List<MapCell>();
         gridMap.GenerateMap(room);
 
         xpos = Mathf.RoundToInt(columns / 2f - width / 2f);

@@ -1,12 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class CombatManager : MonoBehaviour
 {
     public CameraScript cam;
     public HexGridBoard board;
+    public CombatUI combatUI;
 
     //[HideInInspector]
     public List<MapUnit> units;
@@ -20,11 +23,45 @@ public class CombatManager : MonoBehaviour
     private Cell.Direction direction;
 
     private float lastMoved;
-    private float moveDelay = 0.25f;
+    private float moveDelay = 0.4f;
 
     bool gameOverWin, gameOverLose;
 
     public bool auto = false;
+
+    private bool _promptAttack;
+    private bool promptAttack
+    {
+        get
+        {
+            return _promptAttack;
+        }
+        set
+        {
+            _promptAttack = value;
+            if (_promptAttack)
+            {
+                promptMove = false;
+            }
+        }
+    }
+
+    private bool _promptMove;
+    private bool promptMove
+    {
+        get
+        {
+            return _promptMove;
+        }
+        set
+        {
+            _promptMove = value;
+            if (_promptMove)
+            {
+                promptAttack = false;
+            }
+        }
+    }
 
     public enum HighlightMode
     {
@@ -36,9 +73,11 @@ public class CombatManager : MonoBehaviour
 
     void Start()
     {
+        combatUI = FindObjectOfType<CombatUI>();
         lastMoved = Mathf.NegativeInfinity;
         turn = 1;
         gameOverWin = gameOverLose = false;
+        promptAttack = promptMove = false;
         units = new List<MapUnit>();
         foreach (MapUnit m_unit in FindObjectsOfType<MapUnit>())
         {
@@ -51,16 +90,24 @@ public class CombatManager : MonoBehaviour
         switchTarget(getTurnPlayer());
         getTurnPlayer().StartTurn(this);
         highlightMode = HighlightMode.Standard;
+
+        if (combatUI != null)
+            gameplayUISetup();
     }
 
     void Update()
     {
-        manageTurns();
-        if (getTurnPlayer().isPlayerControlled)
+        if (!gameOverLose && !gameOverWin)
         {
-            handleInput();
+            gameplayUI();
+
+            manageTurns();
+            if (getTurnPlayer().isPlayerControlled)
+            {
+                handleInput();
+            }
+            manageHighlights();
         }
-        manageHighlights();
     }
 
     void OnGUI()
@@ -69,7 +116,7 @@ public class CombatManager : MonoBehaviour
         {
             if (!gameOverWin && !gameOverLose)
             {
-                gameplayUI();
+                //gameplayUI();
             }
             else
             {
@@ -80,73 +127,150 @@ public class CombatManager : MonoBehaviour
 
     void gameplayUI()
     {
-        GUIStyle turnText = new GUIStyle(GUI.skin.box);
-        turnText.fontSize = 30;
-        turnText.normal.textColor = Color.black;
-
-        GUI.Box(new Rect(Screen.width - 100, 0, 100, 50), "Turn: " + turn, turnText);
-
-        string UIText = "";
-        UIText += "Unit Name: " + getTurnPlayer().unitName + "\n";
-        UIText += "Health: " + getTurnPlayer().health + "/" + getTurnPlayer().unitScript.maxHealth + "\n";
-        UIText += "Attack Type: " + getTurnPlayer().unitScript.attackType.ToString() + "\n";
-        UIText += "Movement: " + getTurnPlayer().unitScript.mov + "\n";
-        UIText += "Range: " + getTurnPlayer().unitScript.range + "\n";
-        UIText += "Damage: " + getTurnPlayer().unitScript.damage + "\n";
-
-        GUI.Box(new Rect(Screen.width - 200, 50, 200, 100), UIText);
-
-        if (getCursorUnit() != null && getCursorUnit() != getTurnPlayer())
+        if (combatUI != null)
         {
-            MapUnit cursorUnit = getCursorUnit();
-            string cursorText = "";
-            cursorText += "Unit Name: " + cursorUnit.unitName + "\n";
-            cursorText += "Health: " + cursorUnit.health + "/" + cursorUnit.unitScript.maxHealth + "\n";
-            cursorText += "Attack Type: " + cursorUnit.unitScript.attackType.ToString() + "\n";
-            cursorText += "Movement: " + cursorUnit.unitScript.mov + "\n";
-            cursorText += "Range: " + cursorUnit.unitScript.range + "\n";
-            cursorText += "Damage: " + cursorUnit.unitScript.damage + "\n";
+            //GUIStyle turnText = new GUIStyle(GUI.skin.box);
+            //turnText.fontSize = 30;
+            //turnText.normal.textColor = Color.black;
 
-            GUI.Box(new Rect(Screen.width - 200, 150, 200, 100), cursorText);
+            //GUI.Box(new Rect(Screen.width - 100, 0, 100, 50), "Turn: " + turn, turnText);
 
+            combatUI.TurnText.text = "Turn: " + turn;
+
+            string UIText = "";
+            UIText += getTurnPlayer().unitName + "\n";
+            UIText += "Health: " + getTurnPlayer().health + "/" + getTurnPlayer().unitScript.maxHealth + "\n";
+            UIText += "Attack Type: " + getTurnPlayer().unitScript.attackType.ToString() + "\n";
+            UIText += "Movement: " + getTurnPlayer().unitScript.mov + "\n";
+            UIText += "Range: " + getTurnPlayer().unitScript.range + "\n";
+            UIText += "Damage: " + getTurnPlayer().unitScript.damage + "\n";
+
+            combatUI.PlayerText.GetComponentInChildren<Text>().text = UIText;
+
+            //GUI.Box(new Rect(Screen.width - 200, 50, 200, 100), UIText);
+
+            if (getCursorUnit() != null && getCursorUnit() != getTurnPlayer())
+            {
+                MapUnit cursorUnit = getCursorUnit();
+                string cursorText = "";
+
+                if (!cursorUnit.isDead)
+                {
+                    cursorText += "Unit Name: " + cursorUnit.unitName + "\n";
+                    cursorText += "Health: " + cursorUnit.health + "/" + cursorUnit.unitScript.maxHealth + "\n";
+                    cursorText += "Attack Type: " + cursorUnit.unitScript.attackType.ToString() + "\n";
+                    cursorText += "Movement: " + cursorUnit.unitScript.mov + "\n";
+                    cursorText += "Range: " + cursorUnit.unitScript.range + "\n";
+                    cursorText += "Damage: " + cursorUnit.unitScript.damage + "\n";
+                }
+                else {
+                    cursorText += "KO!";
+                }
+
+                combatUI.HighlightText.alpha = 1;
+                combatUI.HighlightText.interactable = true;
+                combatUI.HighlightText.blocksRaycasts = true;
+
+                combatUI.HighlightText.GetComponentInChildren<Text>().text = cursorText;
+                //GUI.Box(new Rect(Screen.width - 200, 150, 200, 100), cursorText);
+            }
+            else {
+                combatUI.HighlightText.alpha = 0;
+                combatUI.HighlightText.interactable = false;
+                combatUI.HighlightText.blocksRaycasts = false;
+            }
+
+            if (getTurnPlayer().isPlayerControlled)
+            {
+                combatUI.MainPanel.blocksRaycasts = true;
+                combatUI.MainPanel.interactable = true;
+                combatUI.MainPanel.alpha = 1;
+
+                combatUI.Movement.GetComponentInChildren<Text>().text = (!promptMove || !getTurnPlayer().canMove) ? "Check Move Range" : "Cancel Move";
+
+                if (getTurnPlayer().canMove && promptMove)
+                {
+                    combatUI.AcceptMovement.GetComponent<CanvasGroup>().alpha = 1;
+                    combatUI.AcceptMovement.GetComponent<CanvasGroup>().interactable = true;
+                    combatUI.AcceptMovement.GetComponent<CanvasGroup>().blocksRaycasts = true;
+                }
+                else {
+                    combatUI.AcceptMovement.GetComponent<CanvasGroup>().alpha = 0;
+                    combatUI.AcceptMovement.GetComponent<CanvasGroup>().interactable = false;
+                    combatUI.AcceptMovement.GetComponent<CanvasGroup>().blocksRaycasts = false;
+                }
+
+                combatUI.Attack.GetComponentInChildren<Text>().text = (!promptAttack || !getTurnPlayer().canAttack) ? "Check Attack Range" : "Cancel Attack";
+
+
+                if (getTurnPlayer().canAttack && promptAttack)
+                {
+                    combatUI.AcceptAttack.GetComponent<CanvasGroup>().alpha = 1;
+                    combatUI.AcceptAttack.GetComponent<CanvasGroup>().interactable = true;
+                    combatUI.AcceptAttack.GetComponent<CanvasGroup>().blocksRaycasts = true;
+                }
+                else {
+                    combatUI.AcceptAttack.GetComponent<CanvasGroup>().alpha = 0;
+                    combatUI.AcceptAttack.GetComponent<CanvasGroup>().interactable = false;
+                    combatUI.AcceptAttack.GetComponent<CanvasGroup>().blocksRaycasts = false;
+                }
+            }
+            else {
+                combatUI.MainPanel.blocksRaycasts = false;
+                combatUI.MainPanel.interactable = false;
+                combatUI.MainPanel.alpha = 0;
+
+            }
         }
+    }
 
-        if (getTurnPlayer().isPlayerControlled)
+    void gameplayUISetup()
+    {
+        combatUI.Movement.onClick.AddListener(() =>
         {
-            if (GUI.Button(new Rect(0, 0, 200, 100), "View Move Range"))
+            promptMove = !promptMove;
+            if (promptMove)
             {
                 highlightMode = HighlightMode.Movement;
             }
-            if (getTurnPlayer().canMove)
-            {
-                if (GUI.Button(new Rect(200, 0, 100, 100), "Move"))
-                {
-                    getTurnPlayer().Move(getCurrCell(), this);
-                }
+            else {
+                highlightMode = HighlightMode.Standard;
             }
+        });
 
-            if (GUI.Button(new Rect(0, 100, 200, 100), "Check Attack Range"))
+        combatUI.AcceptMovement.onClick.AddListener(() =>
+        {
+            getTurnPlayer().Move(getCurrCell(), this);
+        });
+
+        combatUI.Attack.onClick.AddListener(() =>
+        {
+            promptAttack = !promptAttack;
+            if (promptAttack)
             {
                 highlightMode = HighlightMode.Attack;
             }
-
-            if (getTurnPlayer().canAttack)
-            {
-                if (GUI.Button(new Rect(200, 100, 100, 100), "Attack"))
-                {
-                    getTurnPlayer().Attack(getCurrCell(), this);
-                }
-            }
-            if (GUI.Button(new Rect(0, 200, 100, 100), "End Turn"))
-            {
+            else {
                 highlightMode = HighlightMode.Standard;
-                getTurnPlayer().EndTurn();
             }
-            if (GUI.Button(new Rect(0, 300, 100, 100), "Center Cursor"))
-            {
-                switchTarget(getTurnPlayer());
-            }
-        }
+        });
+
+        combatUI.AcceptAttack.onClick.AddListener(() =>
+        {
+            getTurnPlayer().Attack(getCurrCell(), this);
+        });
+
+        combatUI.EndTurn.onClick.AddListener(() =>
+        {
+            highlightMode = HighlightMode.Standard;
+            getTurnPlayer().EndTurn();
+        });
+
+
+        combatUI.CenterCursor.onClick.AddListener(() =>
+        {
+            switchTarget(getTurnPlayer());
+        });
     }
 
     void gameOverUI()
@@ -337,8 +461,13 @@ public class CombatManager : MonoBehaviour
                 turnPlayerIndex = 0;
                 turn++;
             }
-            getTurnPlayer().StartTurn(this);
-            switchTarget(getTurnPlayer());
+
+            if (!getTurnPlayer().isDead)
+            {
+                promptAttack = promptMove = false;
+                getTurnPlayer().StartTurn(this);
+                switchTarget(getTurnPlayer());
+            }
         }
     }
 
@@ -347,6 +476,9 @@ public class CombatManager : MonoBehaviour
     /// </summary>
     void handleInput()
     {
+        if (!EventSystem.current.IsPointerOverGameObject())
+            checkMouseInput();
+
         if (Time.time - lastMoved > moveDelay)
         {
             if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.D))
@@ -405,6 +537,28 @@ public class CombatManager : MonoBehaviour
                 direction = Cell.Direction.East;
                 moveForward();
                 lastMoved = Time.time;
+            }
+        }
+    }
+
+    void checkMouseInput()
+    {
+
+        if (Input.GetKey(KeyCode.Mouse0))
+        {
+            Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Cell cell = board.grid.posToHex(mousePos);
+            if (cell != null)
+            {
+                cursorPos = new Vector2(cell.x, cell.y);
+
+                MapCell m_cell = board.getCellAtPos((int)cursorPos.x, (int)cursorPos.y);
+                if (m_cell)
+                {
+                    cursorPos = new Vector2(m_cell.cellData.x, m_cell.cellData.y);
+                    cam.target = m_cell.transform;
+                    lastMoved = Time.time;
+                }
             }
         }
     }

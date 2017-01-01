@@ -5,6 +5,7 @@ using UnityEngine;
 public class HexGridBoard : MonoBehaviour
 {
     public HexGrid grid;
+    public List<MapCell> cells;
 
     /// <summary>
     /// Generates the Map using the Map Cell class
@@ -20,7 +21,7 @@ public class HexGridBoard : MonoBehaviour
             MapCell newCell = MapCell.createCell(grid, cell);
             newCell.transform.SetParent(this.transform);
             cellList.Add(newCell);
-
+            cells.Add(newCell);
         }
 
         return cellList;
@@ -31,7 +32,7 @@ public class HexGridBoard : MonoBehaviour
         Cell cell = grid.getCellAtPos(x, y);
         if (cell != null)
         {
-            foreach (MapCell m_cell in GetComponentsInChildren<MapCell>())
+            foreach (MapCell m_cell in cells)
             {
                 if (m_cell.cellData.x == cell.x && m_cell.cellData.y == cell.y)
                     return m_cell;
@@ -42,8 +43,13 @@ public class HexGridBoard : MonoBehaviour
 
     void Start()
     {
-        grid.linkCells();
+        cells = new List<MapCell>();
         foreach (MapCell m_cell in GetComponentsInChildren<MapCell>())
+        {
+            cells.Add(m_cell);
+        }
+        grid.linkCells();
+        foreach (MapCell m_cell in cells)
         {
             m_cell.cellData.grid = grid;
         }
@@ -71,7 +77,9 @@ public class HexGridBoard : MonoBehaviour
                 if (currentCell != null && currentCell != this)
                 {
                     if (Cell.getDist(cell.cellData, currentCell.cellData) <= radius)
+                    {
                         neighbors.Add(currentCell);
+                    }
                 }
             }
         }
