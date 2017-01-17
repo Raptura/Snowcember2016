@@ -108,32 +108,82 @@ public abstract class ControlScript : ScriptableObject
 
     public MapCell[] findPath(MapCell to, MapCell from)
     {
-        Queue<MapCell> frontier = new Queue<MapCell>();
-        frontier.Enqueue(from);
+        //Queue<MapCell> frontier = new Queue<MapCell>();
+        //frontier.Enqueue(from);
 
+        //Dictionary<MapCell, MapCell> cameFrom = new Dictionary<MapCell, MapCell>();
+        //MapCell current = frontier.Peek();
+        //while (frontier.Count > 0)
+        //{
+        //    current = frontier.Dequeue();
+
+        //    if (current == to)
+        //        break;
+
+
+        //    Cell cell = current.cellData;
+        //    foreach (Cell neighbors in cell.getNeighbors())
+        //    {
+        //        if (neighbors != null)
+        //        {
+        //            MapCell m_cell = combatInstance.board.getCellAtPos(neighbors.x, neighbors.y);
+
+
+        //            if (m_cell.passable && combatInstance.isEmptyCell(m_cell))
+        //            {
+        //                if (!cameFrom.ContainsKey(m_cell))
+        //                {
+        //                    frontier.Enqueue(m_cell);
+        //                    cameFrom.Add(m_cell, current);
+        //                }
+        //            }
+        //        }
+        //    }
+        Dictionary<MapCell, int> frontier = new Dictionary<MapCell, int>();
+        frontier.Add(from, 0); //Priority Queue, Higher gets priority
         Dictionary<MapCell, MapCell> cameFrom = new Dictionary<MapCell, MapCell>();
-        MapCell current = frontier.Peek();
+        Dictionary<MapCell, int> costSoFar = new Dictionary<MapCell, int>();
+        costSoFar.Add(from, 0);
+
+        MapCell current = from;
         while (frontier.Count > 0)
         {
-            current = frontier.Dequeue();
+            int currCost = 0;
+            foreach (MapCell cell in frontier.Keys)
+            {
+                if (frontier[cell] > currCost)
+                {
+                    current = cell;
+                    currCost = frontier[cell];
+                }
+            }
+
+            frontier.Remove(current);
 
             if (current == to)
                 break;
 
-
-            Cell cell = current.cellData;
-            foreach (Cell neighbors in cell.getNeighbors())
+            foreach (Cell cell in current.cellData.getNeighbors())
             {
-                if (neighbors != null)
+                if (cell != null)
                 {
-                    MapCell m_cell = combatInstance.board.getCellAtPos(neighbors.x, neighbors.y);
-
+                    MapCell m_cell = combatInstance.board.getCellAtPos(cell.x, cell.y);
 
                     if (m_cell.passable && combatInstance.isEmptyCell(m_cell))
                     {
-                        if (!cameFrom.ContainsKey(m_cell))
+                        int newCost = costSoFar[current] + 1;
+                        if (!costSoFar.ContainsKey(m_cell) || newCost < costSoFar[m_cell])
                         {
-                            frontier.Enqueue(m_cell);
+                            if (costSoFar.ContainsKey(m_cell))
+                                costSoFar.Remove(m_cell);
+                            if (frontier.ContainsKey(m_cell))
+                                frontier.Remove(m_cell);
+                            if (cameFrom.ContainsKey(m_cell))
+                                cameFrom.Remove(m_cell);
+
+                            costSoFar.Add(m_cell, newCost);
+                            int priority = newCost + Cell.getDist(m_cell.cellData, to.cellData);
+                            frontier.Add(m_cell, priority);
                             cameFrom.Add(m_cell, current);
                         }
                     }
