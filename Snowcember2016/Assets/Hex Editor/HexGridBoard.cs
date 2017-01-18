@@ -74,7 +74,7 @@ public class HexGridBoard : MonoBehaviour
             {
 
                 MapCell currentCell = getCellAtPos(x, y);
-                if (currentCell != null && currentCell != this)
+                if (currentCell != null && currentCell != cell)
                 {
                     if (Cell.getDist(cell.cellData, currentCell.cellData) <= radius)
                     {

@@ -162,6 +162,8 @@ public class Cell
                         neighbors.Add(currentCell);
                     }
                 }
+
+
             }
         }
 
@@ -187,7 +189,7 @@ public class Cell
     /// <exception cref="ArgumentException">The directions must be within -1 and 1</exception>
     public Cell getNeighbor(int dirX, int dirY)
     {
-        if (dirX < -2 || dirX > 2 || dirY < -2 || dirY > 2)
+        if (dirX < -1 || dirX > 1 || dirY < -1 || dirY > 1)
             throw new ArgumentException("The directions must be within -1 and 1");
 
         foreach (Cell cell in getNeighbors())
@@ -212,7 +214,8 @@ public class Cell
                 if (grid.hasFlatTop)
                     return getNeighbor(0, -1);
                 else
-                    return getNeighbor(1, 1);
+                    return null;
+            //return getNeighbor(1, 1);
 
             case Direction.NorthEast:
                 if (grid.hasFlatTop)
@@ -229,7 +232,8 @@ public class Cell
                 if (grid.hasFlatTop)
                     return getNeighbor(0, 1);
                 else
-                    return getNeighbor(-1, -1);
+                    return null;
+            //return getNeighbor(-1, -1);
 
             case Direction.SouthEast:
                 if (grid.hasFlatTop)
@@ -245,12 +249,14 @@ public class Cell
 
             case Direction.West:
                 if (grid.hasFlatTop)
-                    return getNeighbor(-2, 1);
+                    return null;
+                //return getNeighbor(-2, 1);
                 else
                     return getNeighbor(-1, 1);
             case Direction.East:
                 if (grid.hasFlatTop)
-                    return getNeighbor(2, -1);
+                    return null;
+                //return getNeighbor(2, -1);
                 else
                     return getNeighbor(1, -1);
 
@@ -272,7 +278,11 @@ public class Cell
         if (a == null || b == null)
             return -1;
 
-        return Mathf.Max(Mathf.Abs(a.x - b.x), Mathf.Abs(a.y - b.y));
+        //return Mathf.Max(Mathf.Abs(a.x - b.x), Mathf.Abs(a.y - b.y));
+
+        return (int)(Mathf.Abs(a.x - b.x)
+        + Mathf.Abs(a.x - (a.y + a.x) - b.x + (b.y + b.x))
+        + Mathf.Abs(-(a.y + a.x) + (b.y + b.x))) / 2;
     }
 
     /// <summary>

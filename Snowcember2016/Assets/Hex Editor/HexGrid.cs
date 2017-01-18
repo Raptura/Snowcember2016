@@ -117,7 +117,6 @@ public class HexGrid : ScriptableObject
         }
     }
 
-
     public Vector2 hexToPos(int x, int y)
     {
         float posX, posY;
@@ -128,7 +127,6 @@ public class HexGrid : ScriptableObject
         }
         else
         {
-
             posX = ((x) - ((float)(x + y) / 2f)) * Mathf.Sqrt(3) * cellSize;
             posY = (float)(y + x) * (3f / 2f) * cellSize;
         }

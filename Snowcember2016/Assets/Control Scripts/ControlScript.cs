@@ -70,17 +70,16 @@ public abstract class ControlScript : ScriptableObject
         {
             for (int i = 0; i < path.Length; i++)
             {
-                if (Cell.getDist(path[i].cellData, from.cellData) > dist)
+                if (Cell.getDist(path[i].cellData, from.cellData) >= dist)
                     return path[i - 1 > 0 ? i - 1 : 0];
             }
             return path[path.Length - 1];
         }
         else {
-            //choose a path to work backwards from
             int startIndex = path.Length - 1;
             for (int i = 0; i < path.Length; i++)
             {
-                if (Cell.getDist(path[i].cellData, from.cellData) > dist)
+                if (Cell.getDist(path[i].cellData, from.cellData) >= dist)
                 {
                     startIndex = i - 1 > 0 ? i - 1 : 0;
                     break;
@@ -92,11 +91,11 @@ public abstract class ControlScript : ScriptableObject
                 Cell.Direction dir = path[i].cellData.getDirection(path[startIndex - 1].cellData);
                 if (dir != Cell.Direction.None)
                 {
-                    if (combatInstance.board.grid.hasFlatTop && !(dir == Cell.Direction.East || dir == Cell.Direction.West) ||
-                        (!combatInstance.board.grid.hasFlatTop && !(dir == Cell.Direction.North || dir == Cell.Direction.South))
+                    if (combatInstance.board.grid.hasFlatTop && (dir == Cell.Direction.East || dir == Cell.Direction.West) ||
+                        (!combatInstance.board.grid.hasFlatTop && (dir == Cell.Direction.North || dir == Cell.Direction.South))
                         == true)
                     {
-                        startIndex = i;
+                        startIndex = (i + 1 <= path.Length - 1 ? i + 1 : path.Length - 1);
                         break;
                     }
                 }
@@ -106,6 +105,13 @@ public abstract class ControlScript : ScriptableObject
 
     }
 
+
+    /// <summary>
+    /// Finds the shortest path from one cell to another cell
+    /// </summary>
+    /// <param name="to"></param>
+    /// <param name="from"></param>
+    /// <returns></returns>
     public MapCell[] findPath(MapCell to, MapCell from)
     {
         //Queue<MapCell> frontier = new Queue<MapCell>();
