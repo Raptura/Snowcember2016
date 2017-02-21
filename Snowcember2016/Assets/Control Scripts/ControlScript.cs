@@ -61,47 +61,36 @@ public abstract class ControlScript : ScriptableObject
     /// <param name="from">The origin</param>
     /// <param name="dist">The max distance you can go</param>
     /// <returns>The closest cell to the destination, if max distance is less than the distance of the two cells, returns the destination</returns>
-    public MapCell getClosestCell(MapCell to, MapCell from, int dist, bool adjacentOnly = false)
+    public MapCell getClosestCell(MapCell to, MapCell from, int dist)
     {
         int cellDist = Cell.getDist(to.cellData, from.cellData);
         MapCell[] path = findPath(to, from);
-
-        if (!adjacentOnly)
+        int startIndex = path.Length - 1;
+        for (int i = 0; i < path.Length; i++)
         {
-            for (int i = 0; i < path.Length; i++)
+            if (Cell.getDist(path[i].cellData, from.cellData) >= dist)
             {
-                if (Cell.getDist(path[i].cellData, from.cellData) >= dist)
-                    return path[i - 1 > 0 ? i - 1 : 0];
+                startIndex = i - 1 > 0 ? i - 1 : 0;
+                break;
             }
-            return path[path.Length - 1];
         }
-        else {
-            int startIndex = path.Length - 1;
-            for (int i = 0; i < path.Length; i++)
+        //if you cant move anywhere thats adjacent, just dont move
+        for (int i = startIndex; i > 0; i--)
+        {
+            Cell.Direction dir = path[i].cellData.getDirection(path[startIndex - 1].cellData);
+            if (dir != Cell.Direction.None)
             {
-                if (Cell.getDist(path[i].cellData, from.cellData) >= dist)
+                if (combatInstance.board.grid.hasFlatTop && (dir == Cell.Direction.East || dir == Cell.Direction.West) ||
+                    (!combatInstance.board.grid.hasFlatTop && (dir == Cell.Direction.North || dir == Cell.Direction.South))
+                    == true)
                 {
-                    startIndex = i - 1 > 0 ? i - 1 : 0;
+                    startIndex = (i + 1 < path.Length - 1 ? i + 1 : path.Length - 1);
                     break;
                 }
             }
-            //if you cant move anywhere thats adjacent, just dont move
-            for (int i = startIndex; i > 0; i--)
-            {
-                Cell.Direction dir = path[i].cellData.getDirection(path[startIndex - 1].cellData);
-                if (dir != Cell.Direction.None)
-                {
-                    if (combatInstance.board.grid.hasFlatTop && (dir == Cell.Direction.East || dir == Cell.Direction.West) ||
-                        (!combatInstance.board.grid.hasFlatTop && (dir == Cell.Direction.North || dir == Cell.Direction.South))
-                        == true)
-                    {
-                        startIndex = (i + 1 <= path.Length - 1 ? i + 1 : path.Length - 1);
-                        break;
-                    }
-                }
-            }
-            return path[startIndex];
         }
+        return path[startIndex];
+
 
     }
 
@@ -114,39 +103,11 @@ public abstract class ControlScript : ScriptableObject
     /// <returns></returns>
     public MapCell[] findPath(MapCell to, MapCell from)
     {
-        //Queue<MapCell> frontier = new Queue<MapCell>();
-        //frontier.Enqueue(from);
+        List<MapCell> frontier = new List<MapCell>();
+        frontier.Add(from);
+        List<int> frontier_q = new List<int>();
+        frontier_q.Add(0);
 
-        //Dictionary<MapCell, MapCell> cameFrom = new Dictionary<MapCell, MapCell>();
-        //MapCell current = frontier.Peek();
-        //while (frontier.Count > 0)
-        //{
-        //    current = frontier.Dequeue();
-
-        //    if (current == to)
-        //        break;
-
-
-        //    Cell cell = current.cellData;
-        //    foreach (Cell neighbors in cell.getNeighbors())
-        //    {
-        //        if (neighbors != null)
-        //        {
-        //            MapCell m_cell = combatInstance.board.getCellAtPos(neighbors.x, neighbors.y);
-
-
-        //            if (m_cell.passable && combatInstance.isEmptyCell(m_cell))
-        //            {
-        //                if (!cameFrom.ContainsKey(m_cell))
-        //                {
-        //                    frontier.Enqueue(m_cell);
-        //                    cameFrom.Add(m_cell, current);
-        //                }
-        //            }
-        //        }
-        //    }
-        Dictionary<MapCell, int> frontier = new Dictionary<MapCell, int>();
-        frontier.Add(from, 0); //Priority Queue, Higher gets priority
         Dictionary<MapCell, MapCell> cameFrom = new Dictionary<MapCell, MapCell>();
         Dictionary<MapCell, int> costSoFar = new Dictionary<MapCell, int>();
         costSoFar.Add(from, 0);
@@ -155,16 +116,19 @@ public abstract class ControlScript : ScriptableObject
         while (frontier.Count > 0)
         {
             int currCost = 0;
-            foreach (MapCell cell in frontier.Keys)
+            int pos = 0;
+            for (int i = 0; i < frontier.Count; i++)
             {
-                if (frontier[cell] > currCost)
+                if (frontier_q[i] >= currCost)
                 {
-                    current = cell;
-                    currCost = frontier[cell];
+                    current = frontier[i];
+                    currCost = frontier_q[i];
+                    pos = i;
                 }
             }
 
-            frontier.Remove(current);
+            frontier.RemoveAt(pos);
+            frontier_q.RemoveAt(pos);
 
             if (current == to)
                 break;
@@ -182,14 +146,14 @@ public abstract class ControlScript : ScriptableObject
                         {
                             if (costSoFar.ContainsKey(m_cell))
                                 costSoFar.Remove(m_cell);
-                            if (frontier.ContainsKey(m_cell))
-                                frontier.Remove(m_cell);
                             if (cameFrom.ContainsKey(m_cell))
                                 cameFrom.Remove(m_cell);
 
                             costSoFar.Add(m_cell, newCost);
                             int priority = newCost + Cell.getDist(m_cell.cellData, to.cellData);
-                            frontier.Add(m_cell, priority);
+                            frontier.Add(m_cell);
+                            frontier_q.Add(priority);
+
                             cameFrom.Add(m_cell, current);
                         }
                     }

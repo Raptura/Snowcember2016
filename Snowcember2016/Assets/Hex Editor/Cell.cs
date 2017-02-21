@@ -214,8 +214,8 @@ public class Cell
                 if (grid.hasFlatTop)
                     return getNeighbor(0, -1);
                 else
-                    return null;
-            //return getNeighbor(1, 1);
+                    //return null;
+                    return getNeighbor(1, 1);
 
             case Direction.NorthEast:
                 if (grid.hasFlatTop)
@@ -232,8 +232,8 @@ public class Cell
                 if (grid.hasFlatTop)
                     return getNeighbor(0, 1);
                 else
-                    return null;
-            //return getNeighbor(-1, -1);
+                    //return null;
+                    return getNeighbor(-1, -1);
 
             case Direction.SouthEast:
                 if (grid.hasFlatTop)
@@ -249,14 +249,14 @@ public class Cell
 
             case Direction.West:
                 if (grid.hasFlatTop)
-                    return null;
-                //return getNeighbor(-2, 1);
+                    //return null;
+                    return getNeighbor(-2, 1);
                 else
                     return getNeighbor(-1, 1);
             case Direction.East:
                 if (grid.hasFlatTop)
-                    return null;
-                //return getNeighbor(2, -1);
+                    //return null;
+                    return getNeighbor(2, -1);
                 else
                     return getNeighbor(1, -1);
 
@@ -302,17 +302,18 @@ public class Cell
             if (target.x == x && target.y < y)
                 return Direction.North;
             //good
-            if (target.x == x && target.y > y)
+            else if (target.x == x && target.y > y)
                 return Direction.South;
             //good
-            if (target.x < x && target.y == y)
+            else if (target.x < x && target.y == y)
                 return Direction.NorthWest;
             //good
-            if (target.x > x && target.y == y)
+            else if (target.x > x && target.y == y)
                 return Direction.SouthEast;
 
             if (target.x > x && target.y < y)
                 return Direction.NorthEast;
+
             if (target.x < x && target.y > y)
                 return Direction.SouthWest;
         }
@@ -322,17 +323,18 @@ public class Cell
             if (target.x > x && target.y == y)
                 return Direction.NorthEast;
             //good
-            if (target.x < x && target.y == y)
+            else if (target.x < x && target.y == y)
                 return Direction.SouthWest;
             //good
-            if (target.x == x && target.y >= y)
+            else if (target.x == x && target.y >= y)
                 return Direction.NorthWest;
             //good
-            if (target.x == x && target.y <= y)
+            else if (target.x == x && target.y <= y)
                 return Direction.SouthEast;
 
             if (target.x > x && target.y < y)
                 return Direction.East;
+
             if (target.x < x && target.y > y)
                 return Direction.West;
 

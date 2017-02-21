@@ -10,6 +10,10 @@ using System;
 public class HexGrid : ScriptableObject
 {
 
+    //NOTE:
+    //Q = X
+    //R = -x-y or -(x + y)
+
     /// <summary>
     /// Gets or sets the size of the cell.
     /// Size is relative to your drawing handler
@@ -104,7 +108,6 @@ public class HexGrid : ScriptableObject
         return created;
 
     }
-
 
     /// <summary>
     /// Links the cells in the cell list to this grid

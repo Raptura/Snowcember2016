@@ -67,7 +67,6 @@ public class Adamant : ControlScript
                 List<MapCell> radial = combatInstance.board.getAllInRadius(myUnit.unitScript.range, getNearestEnemyUnit().pos);
 
                 MapCell foundCell = myUnit.pos;
-                int lowestDist = 999;
                 //Debug.Log("Attempting to move into Range");
                 foreach (MapCell m_cell in radial)
                 {
@@ -75,43 +74,36 @@ public class Adamant : ControlScript
                     if (rad_dist == myUnit.unitScript.range)
                     {
                         Cell.Direction dir = myUnit.pos.cellData.getDirection(m_cell.cellData);
-                        if (m_cell != null && myUnit.pos.cellData.getDirection(m_cell.cellData) != Cell.Direction.None)
+                        if (m_cell != null && myUnit.pos.cellData.getDirection(m_cell.cellData) != Cell.Direction.None
+                            && m_cell.passable && combatInstance.isEmptyCell(m_cell))
                         {
                             if (myUnit.unitScript.attackType == Unit.AttackType.Line)
                             {
-                                if (combatInstance.board.grid.hasFlatTop && !(dir == Cell.Direction.East || dir == Cell.Direction.West) ||
-                                    (!combatInstance.board.grid.hasFlatTop && !(dir == Cell.Direction.North || dir == Cell.Direction.South))
-                                    == true)
+                                if (combatInstance.board.grid.hasFlatTop && (dir == Cell.Direction.East || dir == Cell.Direction.West) ||
+                                    (!combatInstance.board.grid.hasFlatTop && (dir == Cell.Direction.North || dir == Cell.Direction.South))
+                                    == false)
                                 {
-                                    int distTofound = Cell.getDist(myUnit.pos.cellData, m_cell.cellData);
-                                    if (distTofound < lowestDist)
-                                    {
-                                        //Debug.Log("Moving into Attack Range!");
-                                        foundCell = m_cell;
-                                        lowestDist = distTofound;
-                                    }
+                                    foundCell = m_cell;
+                                    break;
                                 }
                             }
                             else {
-                                int distTofound = Cell.getDist(myUnit.pos.cellData, m_cell.cellData);
-                                if (distTofound < lowestDist)
-                                {
-                                    //Debug.Log("Moving into Attack Range!");
-                                    foundCell = m_cell;
-                                    lowestDist = distTofound;
-                                }
+                                foundCell = m_cell;
+                                break;
+
                             }
                         }
                     }
                 }
+
                 //move to that cell
-                movCell = getClosestCell(foundCell, myUnit.pos, myUnit.unitScript.mov, myUnit.unitScript.attackType == Unit.AttackType.Line);
+                movCell = getClosestCell(foundCell, myUnit.pos, myUnit.unitScript.mov);
             }
             //if you are not in attack range
             else if (dist > myUnit.unitScript.range)
             {
                 //move to the closest cell to the target
-                movCell = getClosestCell(getNearestEnemyUnit().pos, myUnit.pos, myUnit.unitScript.mov, myUnit.unitScript.attackType == Unit.AttackType.Line);
+                movCell = getClosestCell(getNearestEnemyUnit().pos, myUnit.pos, myUnit.unitScript.mov);
                 //Debug.Log("Moving to Unit");
 
             }
