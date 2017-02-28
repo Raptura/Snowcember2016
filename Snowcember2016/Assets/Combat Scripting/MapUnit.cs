@@ -100,13 +100,17 @@ public class MapUnit : MonoBehaviour
     {
         int dist = Cell.getDist(target.cellData, pos.cellData);
 
-        if (canMove && dist <= unitScript.mov && target.passable && instance.isEmptyCell(target))
+        if ((canMove && dist <= unitScript.mov && target.passable && instance.isEmptyCell(target)
+            ) || target == pos)
         {
             instance.highlightMode = CombatManager.HighlightMode.Movement;
             instance.setCurrCell(target);
             pos = target;
             canMove = false;
             lastAction = Time.time;
+        }
+        else {
+            Debug.Log("Can not move here!");
         }
     }
 
