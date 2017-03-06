@@ -7,7 +7,7 @@ public abstract class ControlScript : ScriptableObject
     /// <summary>
     /// The time it takes for an Ai script to make a move
     /// </summary>
-    public const float AITimer = 2f;
+    public const float AITimer = 1f;
 
     protected MapUnit myUnit;
     protected CombatManager combatInstance;
@@ -54,6 +54,22 @@ public abstract class ControlScript : ScriptableObject
         return result;
     }
 
+    public List<MapUnit> getClosestEnemyQueue()
+    {
+        List<MapUnit> result = new List<MapUnit>();
+
+        foreach (MapUnit unit in combatInstance.units)
+        {
+            if (unit != myUnit && unit.isEnemy != myUnit.isEnemy && !unit.isDead)
+            {
+                result.Add(unit);
+            }
+        }
+        result.Sort((unit1, unit2) => Cell.getDist(unit1.pos.cellData, myUnit.pos.cellData).CompareTo(Cell.getDist(unit2.pos.cellData, myUnit.pos.cellData)));
+
+        return result;
+    }
+
     /// <summary>
     /// Gets the closest cell to a desired position within a certain range
     /// </summary>
@@ -65,33 +81,27 @@ public abstract class ControlScript : ScriptableObject
     {
         int cellDist = Cell.getDist(to.cellData, from.cellData);
         MapCell[] path = findPath(to, from);
-        int startIndex = 0;
-        for (int i = 0; i < path.Length; i++)
+        List<MapCell> goodCells = new List<MapCell>();
+        foreach (MapCell m_cell in path)
         {
-            if (Cell.getDist(path[i].cellData, from.cellData) > dist)
+            if (Cell.getDist(m_cell.cellData, from.cellData) <= dist && combatInstance.isEmptyCell(m_cell) && m_cell != from)
             {
-                startIndex = i - 1 > 0 ? i - 1 : 0;
-                break;
+                goodCells.Add(m_cell);
             }
         }
-        //if you cant move anywhere thats adjacent, just dont move
-        for (int i = startIndex; i >= 0; i--)
+
+        int closest = 999999; //Arbitrary large number
+        MapCell chosenCell = from;
+        foreach (MapCell m_cell in goodCells)
         {
-            //Cell.Direction dir = path[i].cellData.getDirection(path[startIndex - 1].cellData);
-            //if (dir != Cell.Direction.None)
-            //{
-            if (/*combatInstance.board.grid.hasFlatTop && (dir == Cell.Direction.East || dir == Cell.Direction.West) ||
-                    (!combatInstance.board.grid.hasFlatTop && (dir == Cell.Direction.North || dir == Cell.Direction.South))
-                     && */ combatInstance.isEmptyCell(path[i]))
-            {
-                startIndex = i/* (i + 1 < path.Length - 1 ? i + 1 : path.Length - 1) */;
-                break;
+            if (Cell.getDist(m_cell.cellData, to.cellData) <= closest)
+            { //move to the closest cell to target you can move to
+                chosenCell = m_cell;
+                closest = Cell.getDist(m_cell.cellData, to.cellData);
             }
-            //}
         }
-        return path[startIndex];
 
-
+        return chosenCell;
     }
 
     /// <summary>
@@ -102,37 +112,110 @@ public abstract class ControlScript : ScriptableObject
     /// <returns></returns>
     public MapCell[] findPath(MapCell to, MapCell from)
     {
-        Queue<MapCell> frontier = new Queue<MapCell>();
-        frontier.Enqueue(from);
+        //Queue<MapCell> frontier = new Queue<MapCell>();
+        //frontier.Enqueue(from);
 
+        //Dictionary<MapCell, MapCell> cameFrom = new Dictionary<MapCell, MapCell>();
+        //MapCell current = frontier.Peek();
+        //while (frontier.Count > 0)
+        //{
+        //    current = frontier.Dequeue();
+
+        //    if (current == to)
+        //        break;
+
+
+        //    Cell cell = current.cellData;
+        //    foreach (Cell neighbors in cell.getNeighbors())
+        //    {
+        //        if (neighbors != null)
+        //        {
+        //            MapCell m_cell = combatInstance.board.getCellAtPos(neighbors.x, neighbors.y);
+
+
+        //            if (m_cell.passable /* && combatInstance.isEmptyCell(m_cell) */)
+        //            {
+        //                if (!cameFrom.ContainsKey(m_cell))
+        //                {
+        //                    frontier.Enqueue(m_cell);
+        //                    cameFrom.Add(m_cell, current);
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
+
+        //List<MapCell> path = new List<MapCell>();
+        //path.Add(current);
+        //while (current != from)
+        //{
+        //    current = cameFrom[current];
+        //    path.Add(current);
+        //}
+        //path.Reverse();
+
+        //return path.ToArray();
+
+        Dictionary<MapCell, int> frontier = new Dictionary<MapCell, int>();
+        frontier.Add(from, 0); //Priority Queue, Higher gets priority
         Dictionary<MapCell, MapCell> cameFrom = new Dictionary<MapCell, MapCell>();
-        MapCell current = frontier.Peek();
+        Dictionary<MapCell, int> costSoFar = new Dictionary<MapCell, int>();
+        costSoFar.Add(from, 0);
+
+        MapCell current = from;
         while (frontier.Count > 0)
         {
-            current = frontier.Dequeue();
-
-            if (current == to)
-                break;
-
-
-            Cell cell = current.cellData;
-            foreach (Cell neighbors in cell.getNeighbors())
+            int currCost = 99999;
+            foreach (MapCell cell in frontier.Keys)
             {
-                if (neighbors != null)
+                if (frontier[cell] <= currCost)
                 {
-                    MapCell m_cell = combatInstance.board.getCellAtPos(neighbors.x, neighbors.y);
+                    current = cell;
+                    currCost = frontier[cell];
+                }
+            }
 
+            frontier.Remove(current);
 
-                    if (m_cell.passable /* && combatInstance.isEmptyCell(m_cell) */ )
+            //if (current == to)
+            //    break;
+
+            foreach (Cell cell in current.cellData.getNeighbors())
+            {
+                if (cell != null)
+                {
+                    MapCell m_cell = combatInstance.board.getCellAtPos(cell.x, cell.y);
+
+                    if (m_cell.passable)
                     {
-                        if (!cameFrom.ContainsKey(m_cell))
+                        int newCost;
+                        if (combatInstance.isEmptyCell(m_cell))
+                            newCost = costSoFar[current] + 1;
+                        else
+                            newCost = costSoFar[current] + 2;
+
+                        if (!costSoFar.ContainsKey(m_cell) || newCost < costSoFar[m_cell])
                         {
-                            frontier.Enqueue(m_cell);
+                            if (costSoFar.ContainsKey(m_cell))
+                                costSoFar.Remove(m_cell);
+                            if (frontier.ContainsKey(m_cell))
+                                frontier.Remove(m_cell);
+                            if (cameFrom.ContainsKey(m_cell))
+                                cameFrom.Remove(m_cell);
+
+                            costSoFar.Add(m_cell, newCost);
+                            int priority = newCost + Cell.getDist(m_cell.cellData, to.cellData);
+                            frontier.Add(m_cell, priority);
                             cameFrom.Add(m_cell, current);
                         }
                     }
                 }
             }
+
+
+            if (current == to)
+                break;
+
         }
 
         List<MapCell> path = new List<MapCell>();

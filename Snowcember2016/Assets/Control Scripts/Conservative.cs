@@ -52,65 +52,66 @@ public class Conservative : ControlScript
 
     public override void MovePattern()
     {
-        MapUnit nearest = getNearestEnemyUnit();
         MapCell movCell = myUnit.pos;
+        int e_index = 0;
+        MapUnit[] unitQueue = getClosestEnemyQueue().ToArray();
 
-        if (nearest != null)
+        //Find the cell such that you are exactly in range, and no further
+        int dist = Cell.getDist(myUnit.pos.cellData, unitQueue[e_index].pos.cellData);
+
+        //If you are already in attack range
+        if (dist < myUnit.unitScript.range)
         {
-            //Find the cell such that you are exactly in range, and no further
-            int dist = Cell.getDist(myUnit.pos.cellData, getNearestEnemyUnit().pos.cellData);
+            //find first cell that is exactly attack range
+            List<MapCell> radial = combatInstance.board.getAllInRadius(myUnit.unitScript.range, unitQueue[e_index].pos);
 
-            //If you are already in attack range
-            if (dist < myUnit.unitScript.range)
+            MapCell foundCell = myUnit.pos;
+            foreach (MapCell m_cell in radial)
             {
-                //find first cell that is exactly attack range
-                List<MapCell> radial = combatInstance.board.getAllInRadius(myUnit.unitScript.range, getNearestEnemyUnit().pos);
-
-                MapCell foundCell = myUnit.pos;
-                foreach (MapCell m_cell in radial)
+                int rad_dist = Cell.getDist(m_cell.cellData, unitQueue[e_index].pos.cellData);
+                if (rad_dist == myUnit.unitScript.range)
                 {
-                    int rad_dist = Cell.getDist(m_cell.cellData, getNearestEnemyUnit().pos.cellData);
-                    if (rad_dist == myUnit.unitScript.range)
+                    Cell.Direction dir = myUnit.pos.cellData.getDirection(m_cell.cellData);
+                    if (m_cell != null && myUnit.pos.cellData.getDirection(m_cell.cellData) != Cell.Direction.None
+                        && m_cell.passable && combatInstance.isEmptyCell(m_cell))
                     {
-                        Cell.Direction dir = myUnit.pos.cellData.getDirection(m_cell.cellData);
-                        if (m_cell != null && myUnit.pos.cellData.getDirection(m_cell.cellData) != Cell.Direction.None
-                            && m_cell.passable && combatInstance.isEmptyCell(m_cell))
+                        if (myUnit.unitScript.attackType == Unit.AttackType.Line)
                         {
-                            if (myUnit.unitScript.attackType == Unit.AttackType.Line)
+                            if (combatInstance.board.grid.hasFlatTop && (dir == Cell.Direction.East || dir == Cell.Direction.West) ||
+                                (!combatInstance.board.grid.hasFlatTop && (dir == Cell.Direction.North || dir == Cell.Direction.South))
+                                == false)
                             {
-                                if (combatInstance.board.grid.hasFlatTop && (dir == Cell.Direction.East || dir == Cell.Direction.West) ||
-                                    (!combatInstance.board.grid.hasFlatTop && (dir == Cell.Direction.North || dir == Cell.Direction.South))
-                                    == false)
-                                {
-                                    foundCell = m_cell;
-                                    break;
-                                }
-                            }
-                            else {
                                 foundCell = m_cell;
                                 break;
                             }
                         }
+                        else {
+                            foundCell = m_cell;
+                            break;
+                        }
                     }
                 }
-                //move to that cell
-                movCell = getClosestCell(foundCell, myUnit.pos, myUnit.unitScript.mov);
             }
-            //if you are not in attack range
-            else if (dist > myUnit.unitScript.range)
+            //move to that cell
+            movCell = getClosestCell(foundCell, myUnit.pos, myUnit.unitScript.mov);
+        }
+        //if you are not in attack range
+        else if (dist > myUnit.unitScript.range)
+        {
+            while (e_index < unitQueue.Length && movCell == myUnit.pos)
             {
                 //move to the closest cell to the target
-                movCell = getClosestCell(getNearestEnemyUnit().pos, myUnit.pos, myUnit.unitScript.mov);
+                movCell = getClosestCell(unitQueue[e_index].pos, myUnit.pos, myUnit.unitScript.mov);
                 //Debug.Log("Moving to Unit");
-
+                e_index++;
             }
-            //exactly in attack range then stay in place
-            else
-            {
-                movCell = myUnit.pos;
-            }
-
         }
+        //exactly in attack range then stay in place
+        else
+        {
+            movCell = myUnit.pos;
+        }
+
 
         if (movCell != myUnit.pos)
         {

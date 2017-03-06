@@ -50,11 +50,17 @@ public class Aggressive : ControlScript
 
     public override void MovePattern()
     {
-        MapUnit nearest = getNearestEnemyUnit();
         MapCell movCell = myUnit.pos;
+        int e_index = 0;
+        MapUnit[] unitQueue = getClosestEnemyQueue().ToArray();
 
-        if (nearest != null)
-            movCell = getClosestCell(nearest.pos, myUnit.pos, myUnit.unitScript.mov);
+        while (e_index < unitQueue.Length && movCell == myUnit.pos)
+        {
+            //move to the closest cell to the target
+            movCell = getClosestCell(unitQueue[e_index].pos, myUnit.pos, myUnit.unitScript.mov);
+            //Debug.Log("Moving to Unit");
+            e_index++;
+        }
 
         if (movCell != myUnit.pos)
         {
