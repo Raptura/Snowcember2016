@@ -102,6 +102,11 @@ public class CombatManager : MonoBehaviour
             gameplayUI();
 
             manageTurns();
+            if (getTurnPlayer().isDead) {
+                turnOrder.Remove(getTurnPlayer());
+                units.Remove(getTurnPlayer());
+            }
+
             if (getTurnPlayer().isPlayerControlled)
             {
                 handleInput();

@@ -112,50 +112,6 @@ public abstract class ControlScript : ScriptableObject
     /// <returns></returns>
     public MapCell[] findPath(MapCell to, MapCell from)
     {
-        //Queue<MapCell> frontier = new Queue<MapCell>();
-        //frontier.Enqueue(from);
-
-        //Dictionary<MapCell, MapCell> cameFrom = new Dictionary<MapCell, MapCell>();
-        //MapCell current = frontier.Peek();
-        //while (frontier.Count > 0)
-        //{
-        //    current = frontier.Dequeue();
-
-        //    if (current == to)
-        //        break;
-
-
-        //    Cell cell = current.cellData;
-        //    foreach (Cell neighbors in cell.getNeighbors())
-        //    {
-        //        if (neighbors != null)
-        //        {
-        //            MapCell m_cell = combatInstance.board.getCellAtPos(neighbors.x, neighbors.y);
-
-
-        //            if (m_cell.passable /* && combatInstance.isEmptyCell(m_cell) */)
-        //            {
-        //                if (!cameFrom.ContainsKey(m_cell))
-        //                {
-        //                    frontier.Enqueue(m_cell);
-        //                    cameFrom.Add(m_cell, current);
-        //                }
-        //            }
-        //        }
-        //    }
-        //}
-
-        //List<MapCell> path = new List<MapCell>();
-        //path.Add(current);
-        //while (current != from)
-        //{
-        //    current = cameFrom[current];
-        //    path.Add(current);
-        //}
-        //path.Reverse();
-
-        //return path.ToArray();
-
         Dictionary<MapCell, int> frontier = new Dictionary<MapCell, int>();
         frontier.Add(from, 0); //Priority Queue, Higher gets priority
         Dictionary<MapCell, MapCell> cameFrom = new Dictionary<MapCell, MapCell>();
@@ -192,7 +148,7 @@ public abstract class ControlScript : ScriptableObject
                         if (combatInstance.isEmptyCell(m_cell))
                             newCost = costSoFar[current] + 1;
                         else
-                            newCost = costSoFar[current] + 2;
+                            newCost = costSoFar[current] + 3;
 
                         if (!costSoFar.ContainsKey(m_cell) || newCost < costSoFar[m_cell])
                         {
