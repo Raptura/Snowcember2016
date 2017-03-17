@@ -65,15 +65,10 @@ public class GameManager : MonoBehaviour
         GameObject room = new GameObject("Room Gen");
         RoomGen gen = room.AddComponent<RoomGen>();
         gen.cam = cam;
-        gen.columns = 20;
-        gen.rows = 20;
+        gen.radial = true;
+        gen.outerRadius = 10;
+        gen.radius = 5;
 
-        //width
-        gen.w_min = 10;
-        gen.w_max = 10;
-        //height
-        gen.h_min = 10;
-        gen.h_max = 10;
         //enemy
         gen.e_min = 4;
         gen.e_max = 4;
@@ -98,12 +93,12 @@ public class GameManager : MonoBehaviour
         gen.cam = cam;
         gen.columns = 20;
         gen.rows = 20;
-
+        gen.radial = false;
         //width
-        gen.w_min = 15;
+        gen.w_min = 10;
         gen.w_max = 15;
         //height
-        gen.h_min = 15;
+        gen.h_min = 10;
         gen.h_max = 15;
         //enemy
         gen.e_min = 6;
@@ -126,15 +121,10 @@ public class GameManager : MonoBehaviour
         GameObject room = new GameObject("Room Gen");
         RoomGen gen = room.AddComponent<RoomGen>();
         gen.cam = cam;
-        gen.columns = 30;
-        gen.rows = 30;
+        gen.radial = true;
+        gen.outerRadius = 15;
+        gen.radius = 12;
 
-        //width
-        gen.w_min = 25;
-        gen.w_max = 25;
-        //height
-        gen.h_min = 25;
-        gen.h_max = 25;
         //enemy
         gen.e_min = 10;
         gen.e_max = 10;

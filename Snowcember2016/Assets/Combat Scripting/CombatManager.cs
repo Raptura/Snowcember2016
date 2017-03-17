@@ -102,10 +102,6 @@ public class CombatManager : MonoBehaviour
             gameplayUI();
 
             manageTurns();
-            if (getTurnPlayer().isDead) {
-                turnOrder.Remove(getTurnPlayer());
-                units.Remove(getTurnPlayer());
-            }
 
             if (getTurnPlayer().isPlayerControlled)
             {
@@ -168,7 +164,8 @@ public class CombatManager : MonoBehaviour
                     cursorText += "Range: " + cursorUnit.unitScript.range + "\n";
                     cursorText += "Damage: " + cursorUnit.unitScript.damage + "\n";
                 }
-                else {
+                else
+                {
                     cursorText += "KO!";
                 }
 
@@ -179,7 +176,8 @@ public class CombatManager : MonoBehaviour
                 combatUI.HighlightText.GetComponentInChildren<Text>().text = cursorText;
                 //GUI.Box(new Rect(Screen.width - 200, 150, 200, 100), cursorText);
             }
-            else {
+            else
+            {
                 combatUI.HighlightText.alpha = 0;
                 combatUI.HighlightText.interactable = false;
                 combatUI.HighlightText.blocksRaycasts = false;
@@ -199,7 +197,8 @@ public class CombatManager : MonoBehaviour
                     combatUI.AcceptMovement.GetComponent<CanvasGroup>().interactable = true;
                     combatUI.AcceptMovement.GetComponent<CanvasGroup>().blocksRaycasts = true;
                 }
-                else {
+                else
+                {
                     combatUI.AcceptMovement.GetComponent<CanvasGroup>().alpha = 0;
                     combatUI.AcceptMovement.GetComponent<CanvasGroup>().interactable = false;
                     combatUI.AcceptMovement.GetComponent<CanvasGroup>().blocksRaycasts = false;
@@ -214,13 +213,15 @@ public class CombatManager : MonoBehaviour
                     combatUI.AcceptAttack.GetComponent<CanvasGroup>().interactable = true;
                     combatUI.AcceptAttack.GetComponent<CanvasGroup>().blocksRaycasts = true;
                 }
-                else {
+                else
+                {
                     combatUI.AcceptAttack.GetComponent<CanvasGroup>().alpha = 0;
                     combatUI.AcceptAttack.GetComponent<CanvasGroup>().interactable = false;
                     combatUI.AcceptAttack.GetComponent<CanvasGroup>().blocksRaycasts = false;
                 }
             }
-            else {
+            else
+            {
                 combatUI.MainPanel.blocksRaycasts = false;
                 combatUI.MainPanel.interactable = false;
                 combatUI.MainPanel.alpha = 0;
@@ -238,7 +239,8 @@ public class CombatManager : MonoBehaviour
             {
                 highlightMode = HighlightMode.Movement;
             }
-            else {
+            else
+            {
                 highlightMode = HighlightMode.Standard;
             }
         });
@@ -255,7 +257,8 @@ public class CombatManager : MonoBehaviour
             {
                 highlightMode = HighlightMode.Attack;
             }
-            else {
+            else
+            {
                 highlightMode = HighlightMode.Standard;
             }
         });
@@ -452,13 +455,20 @@ public class CombatManager : MonoBehaviour
 
     void manageTurns()
     {
+        checkGameOver();
         if (getTurnPlayer().conductedTurn == false && !getTurnPlayer().isDead)
         {
             getTurnPlayer().TurnUpdate();
         }
         else
         {
-            checkGameOver();
+            if (getTurnPlayer().isDead)
+            {
+                checkGameOver();
+                turnOrder.Remove(getTurnPlayer());
+                return;
+            }
+
             if (turnPlayerIndex != turnOrder.Count - 1)
                 turnPlayerIndex++;
             else

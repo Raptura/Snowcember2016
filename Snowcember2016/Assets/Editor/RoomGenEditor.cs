@@ -27,36 +27,46 @@ public class RoomGenEditor : Editor
 
         gen.hasFlatTop = EditorGUILayout.Toggle("Has Flat Top", gen.hasFlatTop);
         gen.cellSize = EditorGUILayout.FloatField("Cell Size", gen.cellSize);
+        gen.radial = EditorGUILayout.Toggle("Is Radius Based", gen.radial);
 
-        gen.columns = EditorGUILayout.IntField("Columns", gen.columns);
-        gen.rows = EditorGUILayout.IntField("Rows", gen.columns);
-        //Width Min max Slider
+        if (gen.radial)
+        {
+            gen.outerRadius = EditorGUILayout.IntField("Outer Radius", gen.outerRadius);
+            gen.radius = EditorGUILayout.IntField("Radius", gen.radius);
+        }
+        else
+        {
 
-        gen.w_min = EditorGUILayout.IntField("Min Width", gen.w_min);
-        gen.w_max = EditorGUILayout.IntField("Max Width", gen.w_max);
+            gen.columns = EditorGUILayout.IntField("Columns", gen.columns);
+            gen.rows = EditorGUILayout.IntField("Rows", gen.rows);
 
-        float w_min = gen.w_min;
-        float w_max = gen.w_max;
+            //Width Min max Slider
+            gen.w_min = EditorGUILayout.IntField("Min Width", gen.w_min);
+            gen.w_max = EditorGUILayout.IntField("Max Width", gen.w_max);
 
-        EditorGUILayout.MinMaxSlider(ref w_min, ref w_max, 0, gen.columns);
+            float w_min = gen.w_min;
+            float w_max = gen.w_max;
 
-        gen.w_min = Mathf.RoundToInt(w_min);
-        gen.w_max = Mathf.RoundToInt(w_max);
+            EditorGUILayout.MinMaxSlider(ref w_min, ref w_max, 0, gen.columns);
 
-        //Height Min Max Slider
+            gen.w_min = Mathf.RoundToInt(w_min);
+            gen.w_max = Mathf.RoundToInt(w_max);
+
+            //Height Min Max Slider
 
 
-        gen.h_min = EditorGUILayout.IntField("Min Height", gen.h_min);
-        gen.h_max = EditorGUILayout.IntField("Max Height", gen.h_max);
+            gen.h_min = EditorGUILayout.IntField("Min Height", gen.h_min);
+            gen.h_max = EditorGUILayout.IntField("Max Height", gen.h_max);
 
-        float h_min = gen.h_min;
-        float h_max = gen.h_max;
+            float h_min = gen.h_min;
+            float h_max = gen.h_max;
 
-        EditorGUILayout.MinMaxSlider(ref h_min, ref h_max, 0, gen.rows);
+            EditorGUILayout.MinMaxSlider(ref h_min, ref h_max, 0, gen.rows);
 
-        gen.h_min = Mathf.RoundToInt(h_min);
-        gen.h_max = Mathf.RoundToInt(h_max);
+            gen.h_min = Mathf.RoundToInt(h_min);
+            gen.h_max = Mathf.RoundToInt(h_max);
 
+        }
         //Enemy Count Min Max Slider
 
         gen.e_min = EditorGUILayout.IntField("Min Enemy Count", gen.e_min);

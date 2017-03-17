@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class RoomGen : MonoBehaviour
 {
@@ -23,6 +24,9 @@ public class RoomGen : MonoBehaviour
     public int h_min, h_max; //height
     public int e_min, e_max; //enemies
 
+    public int outerRadius;
+    public int radius;
+
     public RangeAttribute roomWidth, roomHeight, enemyCount;
     public int friendlyCount;
 
@@ -39,9 +43,12 @@ public class RoomGen : MonoBehaviour
     public ControlScript playerScript;
     public ControlScript[] friendlyScripts;
     public bool isAuto;
+    public bool radial;
 
-    private TileType[][] tiles;                               // A jagged array of tile types representing the board, like a grid.
-    private EventType[][] events;                               // A jagged array of tile types representing the board, like a grid.
+    //TileType + Coord(based on tile)
+    private Dictionary<Cell, TileType> tileMap;
+    private Dictionary<Cell, EventType> eventMap;
+
     private GameObject boardHolder;                           // GameObject that acts as a container for all other tiles.
     private GameObject eventHolder;
     private GameObject enemyHolder;
@@ -64,8 +71,6 @@ public class RoomGen : MonoBehaviour
         eventHolder = new GameObject("Event Holder");
         friendlyHolder = new GameObject("Friendly Holder");
 
-        SetupTilesAndEventsArray();
-
         CreateRoom();
 
         SetEventValues();
@@ -80,38 +85,30 @@ public class RoomGen : MonoBehaviour
     }
 
     /// <summary>
-    /// Creates an empty Tile array
-    /// </summary>
-    void SetupTilesAndEventsArray()
-    {
-        // Set the tiles jagged array to the correct width.
-        tiles = new TileType[columns + 1][];
-        events = new EventType[columns + 1][];
-
-        // Go through all the tile arrays...
-        for (int i = 0; i < tiles.Length; i++)
-        {
-            // ... and set each tile array is the correct height.
-            tiles[i] = new TileType[rows + 1];
-            events[i] = new EventType[rows + 1];
-        }
-    }
-
-    /// <summary>
     /// Creates and Sets up the Room
     /// </summary>
     void CreateRoom()
     {
         room = ScriptableObject.CreateInstance<HexGrid>();
-        room.cells = new System.Collections.Generic.List<Cell>();
+        room.cells = new List<Cell>();
         room.hasFlatTop = hasFlatTop;
         room.cellSize = cellSize;
 
-        width = (int)Random.Range(roomWidth.min, roomWidth.max);
-        height = (int)Random.Range(roomWidth.min, roomHeight.max);
-        room.createCellGroup(0, 0, columns, rows);
+        if (radial)
+        {
+            room.createCellGroup(0, 0, outerRadius);
+            width = radius * 2;
+            height = radius * 2;
+        }
+        else
+        {
+            width = (int)Random.Range(roomWidth.min, roomWidth.max);
+            height = (int)Random.Range(roomWidth.min, roomHeight.max);
+            room.createCellGroup(0, 0, columns, rows);
+        }
+
         room.linkCells();
-        gridMap.cells = new System.Collections.Generic.List<MapCell>();
+        gridMap.cells = new List<MapCell>();
         gridMap.GenerateMap(room);
 
         xpos = Mathf.RoundToInt(columns / 2f - width / 2f);
@@ -121,66 +118,83 @@ public class RoomGen : MonoBehaviour
 
     void SetTileValues()
     {
-        // ... and for each room go through it's width.
-        for (int i = 0; i < width; i++)
+        tileMap = new Dictionary<Cell, TileType>();
+        //Assign Each Cell to default Floor Type
+        foreach (Cell cell in room.cells)
         {
-            int xCoord = xpos + i;
-
-            // For each horizontal tile, go up vertically through the room's height.
-            for (int j = 0; j < height; j++)
+            if (radial)
             {
-                int yCoord = ypos + j;
-
-                // The coordinates in the jagged array are based on the room's position and it's width and height.
-                tiles[xCoord][yCoord] = TileType.Floor;
+                if (Cell.getDist(cell, room.getCellAtPos(0, 0)) <= radius)
+                {
+                    tileMap.Add(cell, TileType.Floor);
+                }
+                else
+                {
+                    tileMap.Add(cell, TileType.Wall);
+                }
             }
+            else
+            {
+                if (cell.x <= width / 2 && cell.y <= height / 2 &&
+                   cell.x >= -width / 2 && cell.y >= -height / 2)
+                {
+                    tileMap.Add(cell, TileType.Floor);
+                }
+                else
+                {
+                    tileMap.Add(cell, TileType.Wall);
+                }
+            }
+
         }
+
     }
 
     void SetEventValues()
     {
+        eventMap = new Dictionary<Cell, EventType>();
+        foreach (Cell cell in room.cells)
+        {
+            eventMap.Add(cell, EventType.None);
+        }
+
         setEnemyTiles();
         setFriendlyTiles();
     }
 
     void InstantiateTiles()
     {
-        // Go through all the tiles in the jagged array...
-        for (int i = 0; i < tiles.Length; i++)
+        List<Cell> keys = new List<Cell>(tileMap.Keys);
+        foreach (Cell cell in keys.ToArray())
         {
-            for (int j = 0; j < tiles[i].Length; j++)
+            if (tileMap[cell] == TileType.Floor)
             {
-                if (tiles[i][j] == TileType.Floor)
-                {
-                    MapCell floor = InstantiateMapCell(floorTiles, i, j);
-                    floor.passable = true;
-                }
-
-                if (tiles[i][j] == TileType.Wall)
-                {
-                    MapCell wall = InstantiateMapCell(wallTiles, i, j);
-                    wall.passable = false;
-                }
+                MapCell floor = InstantiateMapCell(floorTiles, cell);
+                floor.passable = true;
             }
+
+            if (tileMap[cell] == TileType.Wall)
+            {
+                MapCell wall = InstantiateMapCell(wallTiles, cell);
+                wall.passable = false;
+            }
+
         }
     }
 
     void InstantiateEvents()
     {
-        // Go through all the tiles in the jagged array...
-        for (int i = 0; i < events.Length; i++)
+        List<Cell> keys = new List<Cell>(eventMap.Keys);
+        foreach (Cell cell in keys.ToArray())
         {
-            for (int j = 0; j < events[i].Length; j++)
+            // If the tile type is Wall...
+            if (eventMap[cell] == EventType.Enemy)
             {
-                // If the tile type is Wall...
-                if (events[i][j] == EventType.Enemy)
-                {
-                    setupEnemy(i - (columns / 2), j - (rows / 2));
-                }
-                if (events[i][j] == EventType.Friendly)
-                {
-                    setupFriendly(i - (columns / 2), j - (rows / 2));
-                }
+                setupEnemy(cell);
+            }
+            if (eventMap[cell] == EventType.Friendly)
+            {
+                setupFriendly(cell);
             }
         }
     }
@@ -192,14 +206,14 @@ public class RoomGen : MonoBehaviour
     /// <param name="xCoord"></param>
     /// <param name="yCoord"></param>
     /// <param name="parent"></param>
-    GameObject InstantiateFromArray(GameObject[] prefabs, int xCoord, int yCoord, GameObject parent)
+    GameObject InstantiateFromArray(GameObject[] prefabs, Cell cell, GameObject parent)
     {
         // Create a random index for the array.
         int randomIndex = Random.Range(0, prefabs.Length);
 
+        MapCell m_cell = gridMap.getCellAtPos(cell.x, cell.y);
         // The position to be instantiated at is based on the coordinates.
-        MapCell cell = gridMap.getCellAtPos(xCoord, yCoord);
-        Vector3 position = new Vector3(cell.transform.position.x, cell.transform.position.y, 0f);
+        Vector3 position = new Vector3(m_cell.transform.position.x, m_cell.transform.position.y, 0f);
 
         // Create an instance of the prefab from the random index of the array.
         GameObject instance = Instantiate(prefabs[randomIndex], position, Quaternion.identity) as GameObject;
@@ -209,15 +223,15 @@ public class RoomGen : MonoBehaviour
         return instance;
     }
 
-    MapCell InstantiateMapCell(Sprite[] sprites, int xCoord, int yCoord)
+    MapCell InstantiateMapCell(Sprite[] sprites, Cell cell)
     {
         // Create a random index for the array.
         int randomIndex = Random.Range(0, sprites.Length);
 
-        MapCell cell = gridMap.getCellAtPos(xCoord - columns / 2, yCoord - rows / 2);
-        cell.GetComponent<SpriteRenderer>().sprite = sprites[randomIndex];
+        MapCell m_cell = gridMap.getCellAtPos(cell.x, cell.y);
+        m_cell.GetComponent<SpriteRenderer>().sprite = sprites[randomIndex];
 
-        return cell;
+        return m_cell;
     }
 
     void createCombatManager()
@@ -230,9 +244,9 @@ public class RoomGen : MonoBehaviour
         manager.auto = isAuto;
     }
 
-    void setupEnemy(int x, int y)
+    void setupEnemy(Cell cell)
     {
-        GameObject unit = InstantiateFromArray(enemyUnits, x, y, enemyHolder);
+        GameObject unit = InstantiateFromArray(enemyUnits, cell, enemyHolder);
         MapUnit m_unit = unit.GetComponent<MapUnit>();
         //Add the Component for Control Script Randomly
 
@@ -242,14 +256,14 @@ public class RoomGen : MonoBehaviour
         m_unit.controlScript = enemyScripts[randomIndex];
 
         m_unit.isEnemy = true;
-        m_unit.startPosX = x;
-        m_unit.startPosY = y;
-        m_unit.pos = gridMap.getCellAtPos(x, y);
+        m_unit.startPosX = cell.x;
+        m_unit.startPosY = cell.y;
+        m_unit.pos = gridMap.getCellAtPos(cell.x, cell.y);
     }
 
-    void setupFriendly(int x, int y)
+    void setupFriendly(Cell cell)
     {
-        GameObject unit = InstantiateFromArray(friendlyUnits, x, y, friendlyHolder);
+        GameObject unit = InstantiateFromArray(friendlyUnits, cell, friendlyHolder);
         MapUnit m_unit = unit.GetComponent<MapUnit>();
         m_unit.isPlayerControlled = !isAuto;
         if (!isAuto)
@@ -262,9 +276,9 @@ public class RoomGen : MonoBehaviour
             m_unit.controlScript = friendlyScripts[randomIndex];
         }
         m_unit.isEnemy = false;
-        m_unit.startPosX = x;
-        m_unit.startPosY = y;
-        m_unit.pos = gridMap.getCellAtPos(x, y);
+        m_unit.startPosX = cell.x;
+        m_unit.startPosY = cell.y;
+        m_unit.pos = gridMap.getCellAtPos(cell.x, cell.y);
     }
 
     void setEnemyTiles()
@@ -272,25 +286,49 @@ public class RoomGen : MonoBehaviour
         int enemiesPlaced = 0;
 
         int enemies = (int)Random.Range(enemyCount.min, enemyCount.max);
+        int posx_min, posx_max, posy_min, posy_max;
+
+        if (radial)
+        {
+            posx_min = radius - (radius / 4);
+            posx_max = radius;
+
+            posy_min = -radius;
+            posy_max = radius;
+        }
+        else
+        {
+            posx_min = -(width / 2);
+            posx_max = -((width / 2) - (width / 4));
+
+            posy_min = -(height / 2);
+            posy_max = -((height / 2) - (height / 4));
+        }
 
         while (enemiesPlaced < enemies)
         {
-            int posx_min = xpos;
-            int posx_max = xpos + enemiesPlaced + 1;
 
-            int posy_min = ypos;
-            int posy_max = ypos + enemiesPlaced + 1;
+            int posx = (int)Random.Range(posx_min, posx_max);
+            int posy = (int)Random.Range(posy_min, posy_max);
 
-            int epos_x, epos_y;
-
-            epos_x = (int)(Random.Range(posx_min, posx_max));
-            epos_y = (int)(Random.Range(posy_min, posy_max));
-
-
-            if (events[epos_x][epos_y] == EventType.None)
+            List<Cell> keys = new List<Cell>(eventMap.Keys);
+            foreach (Cell cell in keys.ToArray())
             {
-                events[epos_x][epos_y] = EventType.Enemy;
-                enemiesPlaced++;
+
+                if (/* cell.x <= posx_max && cell.x >= posx_min
+                    && cell.y <= posy_max && cell.y >= posy_min */
+                    cell.x == posx && cell.y == posy)
+                {
+                    if (!radial || Cell.getDist(cell, room.getCellAtPos(0, 0)) <= radius)
+                    {
+                        if (eventMap[cell] == EventType.None)
+                        {
+                            eventMap[cell] = EventType.Enemy;
+                            enemiesPlaced++;
+                            break;
+                        }
+                    }
+                }
             }
 
         }
@@ -300,26 +338,50 @@ public class RoomGen : MonoBehaviour
     {
         int friendliesPlaced = 0;
 
+        int posx_min, posx_max, posy_min, posy_max;
+
+        if (radial)
+        {
+            posx_min = -radius;
+            posx_max = -radius + (radius / 4);
+
+            posy_min = -radius;
+            posy_max = radius;
+        }
+        else
+        {
+            posx_min = (width / 2) - (width / 4);
+            posx_max = (width / 2);
+
+            posy_min = (height / 2) - (height / 4);
+            posy_max = (height / 2);
+        }
+
         while (friendliesPlaced < friendlyCount)
         {
-            int posx_min = (int)((width + xpos)) - friendliesPlaced - 1;
-            int posx_max = xpos + width;
 
-            int posy_min = (int)((height + ypos)) - friendliesPlaced - 1;
-            int posy_max = ypos + height;
+            int posx = (int)Random.Range(posx_min, posx_max);
+            int posy = (int)Random.Range(posy_min, posy_max);
 
-            int epos_x, epos_y;
-
-            epos_x = (int)(Random.Range(posx_min, posx_max));
-            epos_y = (int)(Random.Range(posy_min, posy_max));
-
-
-            if (events[epos_x][epos_y] == EventType.None)
+            List<Cell> keys = new List<Cell>(eventMap.Keys);
+            foreach (Cell cell in keys.ToArray())
             {
-                events[epos_x][epos_y] = EventType.Friendly;
-                friendliesPlaced++;
+
+                if (/* cell.x <= posx_max && cell.x >= posx_min
+                    && cell.y <= posy_max && cell.y >= posy_min */
+                    cell.x == posx && cell.y == posy)
+                {
+                    if (!radial || Cell.getDist(cell, room.getCellAtPos(0, 0)) <= radius)
+                    {
+                        if (eventMap[cell] == EventType.None)
+                        {
+                            eventMap[cell] = EventType.Friendly;
+                            friendliesPlaced++;
+                            break;
+                        }
+                    }
+                }
             }
         }
     }
-
 }

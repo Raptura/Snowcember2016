@@ -326,16 +326,20 @@ public class Cell
             else if (target.x < x && target.y == y)
                 return Direction.SouthWest;
             //good
-            else if (target.x == x && target.y >= y)
+            else if (target.x == x && target.y > y)
                 return Direction.NorthWest;
             //good
-            else if (target.x == x && target.y <= y)
+            else if (target.x == x && target.y < y)
                 return Direction.SouthEast;
 
-            if (target.x > x && target.y < y)
+            if (target.x > x && target.y < y
+                && x + y == target.x + target.y
+                )
                 return Direction.East;
 
-            if (target.x < x && target.y > y)
+            if (target.x < x && target.y > y
+                && x + y == target.x + target.y
+                )
                 return Direction.West;
 
         }

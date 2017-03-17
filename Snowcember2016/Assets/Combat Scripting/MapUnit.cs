@@ -109,7 +109,8 @@ public class MapUnit : MonoBehaviour
             canMove = false;
             lastAction = Time.time;
         }
-        else {
+        else
+        {
             Debug.Log("Can not move here!");
         }
     }
@@ -162,10 +163,11 @@ public class MapUnit : MonoBehaviour
 
                     foreach (MapUnit unit in instance.units)
                     {
-                        if (unit.pos == curr)
+
+                        if (unit.pos == curr && !unit.isDead)
                         {
                             unit.handleDamage(this.unitScript);
-                            return;
+                            //return;
                         }
                     }
                 }

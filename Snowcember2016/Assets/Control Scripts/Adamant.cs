@@ -65,7 +65,6 @@ public class Adamant : ControlScript
             //find first cell that is exactly attack range
             List<MapCell> radial = combatInstance.board.getAllInRadius(myUnit.unitScript.range, unitQueue[e_index].pos);
 
-            MapCell foundCell = myUnit.pos;
             //Debug.Log("Attempting to move into Range");
             foreach (MapCell m_cell in radial)
             {
@@ -73,8 +72,8 @@ public class Adamant : ControlScript
                 if (rad_dist == myUnit.unitScript.range)
                 {
                     Cell.Direction dir = myUnit.pos.cellData.getDirection(m_cell.cellData);
-                    if (m_cell != null && myUnit.pos.cellData.getDirection(m_cell.cellData) != Cell.Direction.None
-                        && m_cell.passable && combatInstance.isEmptyCell(m_cell))
+                    if (m_cell != null /*&& myUnit.pos.cellData.getDirection(m_cell.cellData) != Cell.Direction.None
+                        && m_cell.passable && combatInstance.isEmptyCell(m_cell)*/)
                     {
                         if (myUnit.unitScript.attackType == Unit.AttackType.Line)
                         {
@@ -82,13 +81,21 @@ public class Adamant : ControlScript
                                 (!combatInstance.board.grid.hasFlatTop && (dir == Cell.Direction.North || dir == Cell.Direction.South))
                                 == false)
                             {
-                                foundCell = m_cell;
-                                break;
+                                MapCell foundCell = getClosestCell(m_cell, myUnit.pos, myUnit.unitScript.mov);
+                                if (foundCell != myUnit.pos)
+                                {
+                                    movCell = foundCell;
+                                    break;
+                                }
                             }
                         }
                         else {
-                            foundCell = m_cell;
-                            break;
+                            MapCell foundCell = getClosestCell(m_cell, myUnit.pos, myUnit.unitScript.mov);
+                            if (foundCell != myUnit.pos)
+                            {
+                                movCell = foundCell;
+                                break;
+                            }
 
                         }
                     }
@@ -96,7 +103,7 @@ public class Adamant : ControlScript
             }
 
             //move to that cell
-            movCell = getClosestCell(foundCell, myUnit.pos, myUnit.unitScript.mov);
+            //movCell = getClosestCell(foundCel, myUnit.pos, myUnit.unitScript.mov);
         }
 
         //if you are not in attack range

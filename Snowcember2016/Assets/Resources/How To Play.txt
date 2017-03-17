@@ -10,6 +10,6 @@ Damage: How much damage a unit's attack will do.
 
 Attack Types:
 Point: Attack will be performed on the selected point on the map.
-Line: Attack will be performed on the first enemy in a specified direction.
+Line: Attack will be performed on all the enemys in a specified direction leading up to the cursor.
 Spread: Attack will effect an area around the specified point on the map.
 
