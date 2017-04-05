@@ -459,6 +459,13 @@ public class CombatManager : MonoBehaviour
         if (getTurnPlayer().conductedTurn == false && !getTurnPlayer().isDead)
         {
             getTurnPlayer().TurnUpdate();
+
+            if (getTurnPlayer().isDead)
+            {
+                checkGameOver();
+                turnOrder.Remove(getTurnPlayer());
+                return;
+            }
         }
         else
         {
